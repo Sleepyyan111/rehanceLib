@@ -136,7 +136,7 @@ local Main = Utility.Panel({
     ClipsDescendants = true,
     Visible = false,
 }, {
-
+    Utility.new("UIStroke", { Color = Library.Config.Theme.Border }),
 })
 
 -- SideBar (tab navigation, icon + title header, like Elerium/Luminosity)
@@ -248,6 +248,7 @@ local GuiButton = Utility.Panel({
     Position = UDim2.new(0.5, -25, 0.07, 0),
     ImageColor3 = Library.Config.Theme.Background,
 }, {
+    Utility.new("UIStroke", { Color = Library.Config.Theme.Border }),
     Utility.new("TextButton", {
         Name = "Hit",
         Size = UDim2.new(1, 0, 1, 0),
@@ -430,7 +431,7 @@ function Library:NewTab(name, icon)
 
     local function BaseRow(height)
         local frame = Utility.Panel({
-            Size = UDim2.new(0, 610, 0, height or 42),
+            Size = UDim2.new(0, 480, 0, height or 42),
             ImageColor3 = Library.Config.Theme.Darker,
             ClipsDescendants = true,
             Parent = tab.ElementContainer,
@@ -554,6 +555,7 @@ function Library:NewTab(name, icon)
             Visible = false,
             ZIndex = 20,
         }, {
+            Utility.new("UIStroke", { Color = Library.Config.Theme.Border }),
             Utility.new("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Padding = UDim.new(0, 2),
