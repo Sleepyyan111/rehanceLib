@@ -6,12 +6,11 @@
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local Players = game:GetService("Players")
 
 -- Configuration
 Library.Config = {
     Theme = {
-        Background = Color3.fromRGB(24, 24, 30),  -- Updated
+        Background = Color3.fromRGB(25, 25, 31),
         Accent = Color3.fromRGB(148, 162, 255),
         Text = Color3.fromRGB(199, 199, 199),
         Darker = Color3.fromRGB(30, 30, 37),
@@ -22,41 +21,18 @@ Library.Config = {
     AnimationSpeed = 0.3,
 }
 
--- Get or create ScreenGui (persists on death)
-local function GetOrCreateScreenGui()
-    local player = Players.LocalPlayer
-    if not player then return nil end
-    
-    local gui = player:FindFirstChild("rehanceUI")
-    if not gui then
-        gui = Instance.new("ScreenGui")
-        gui.Name = "rehanceUI"
-        gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-        gui.Parent = player:WaitForChild("PlayerGui")
-        gui.ResetOnSpawn = false
-    end
-    return gui
-end
-
--- Create ScreenGui
-local ScreenGui = GetOrCreateScreenGui()
-if not ScreenGui then
-    error("Failed to create ScreenGui")
-end
-
--- If player respawns, re-parent to new PlayerGui
-Players.LocalPlayer.CharacterAdded:Connect(function()
-    if ScreenGui and ScreenGui.Parent ~= Players.LocalPlayer:FindFirstChild("PlayerGui") then
-        ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
-    end
-end)
+-- Main GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "rehanceUI"
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
 -- Main Frame
 local Main = Instance.new("Frame")
 Main.Name = "Main"
 Main.Size = UDim2.new(0, 650, 0, 400)
-Main.Position = UDim2.new(0.5, -325, 0.021, 0)
-Main.BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
+Main.Position = UDim2.new(0.5, -325, 0.5, -200)
+Main.BackgroundColor3 = Library.Config.Theme.Background
 Main.BorderSizePixel = 0
 Main.ClipsDescendants = true
 Main.Visible = false
@@ -96,7 +72,7 @@ Username.Name = "Username"
 Username.Size = UDim2.new(0, 148, 0, 31)
 Username.Position = UDim2.new(1, -158, 0, 0)
 Username.BackgroundTransparency = 1
-Username.Text = Players.LocalPlayer.DisplayName
+Username.Text = game.Players.LocalPlayer.DisplayName
 Username.TextColor3 = Color3.fromRGB(185, 185, 185)
 Username.TextSize = 14
 Username.TextXAlignment = Enum.TextXAlignment.Right
@@ -116,7 +92,7 @@ local TabChooser = Instance.new("Frame")
 TabChooser.Name = "TabChooser"
 TabChooser.Size = UDim2.new(0, 215, 0, 30)
 TabChooser.Position = UDim2.new(0.5, -107.5, 1, -35)
-TabChooser.BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
+TabChooser.BackgroundColor3 = Library.Config.Theme.Background
 TabChooser.BorderSizePixel = 0
 TabChooser.ClipsDescendants = true
 TabChooser.Parent = Main
@@ -136,12 +112,12 @@ TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 TabListLayout.Parent = TabChooser
 
--- Toggle Button (Gui Button) - Top center
+-- Toggle Button (Gui Button)
 local GuiButton = Instance.new("TextButton")
 GuiButton.Name = "GuiButton"
 GuiButton.Size = UDim2.new(0, 50, 0, 50)
-GuiButton.Position = UDim2.new(0.5, -25, 0.021, 0)
-GuiButton.BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
+GuiButton.Position = UDim2.new(0.5, -25, 0.5, -25)
+GuiButton.BackgroundColor3 = Library.Config.Theme.Background
 GuiButton.Text = "r//h"
 GuiButton.TextColor3 = Library.Config.Theme.Accent
 GuiButton.TextSize = 14
@@ -208,14 +184,14 @@ function Library:NewTab(name)
     tab.Frame.Active = true
     tab.Frame.Parent = TabContainer
     tab.Frame.Visible = false
-
+    
     -- UIListLayout for elements
     local layout = Instance.new("UIListLayout")
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.Padding = UDim.new(0, 3)
     layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.Parent = tab.Frame
-
+    
     -- Create tab button
     local button = Instance.new("TextButton")
     button.Name = "TabButton"
@@ -227,7 +203,7 @@ function Library:NewTab(name)
     button.AutoButtonColor = false
     button.BorderSizePixel = 0
     button.Parent = TabChooser
-
+    
     if not currentTab then
         currentTab = tab
         tab.Frame.Visible = true
@@ -235,48 +211,39 @@ function Library:NewTab(name)
     else
         button.TextColor3 = Color3.fromRGB(107, 107, 107)
     end
-
-    -- Simple tab switching (no animation)
+    
     button.MouseButton1Click:Connect(function()
-        if currentTab == tab then return end
-        
-        -- Hide current tab
-        if currentTab then
-            currentTab.Frame.Visible = false
+        for _, t in pairs(tabs) do
+            t.Frame.Visible = false
         end
-        
-        -- Show new tab
-        tab.Frame.Visible = true
-        
-        -- Update button colors
         for _, btn in pairs(tabButtons) do
             btn.TextColor3 = Color3.fromRGB(107, 107, 107)
         end
+        tab.Frame.Visible = true
         button.TextColor3 = Library.Config.Theme.Accent
-        
         currentTab = tab
     end)
-
+    
     table.insert(tabs, tab)
     table.insert(tabButtons, button)
-
+    
     -- Element creation functions
     function tab:Toggle(text, default)
         local element = {}
         element.Type = "Toggle"
         element.Value = default or false
-
+        
         local frame = Instance.new("Frame")
         frame.Size = UDim2.new(0, 639, 0, 42)
         frame.BackgroundColor3 = Library.Config.Theme.Darker
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = true
         frame.Parent = tab.Frame
-
+        
         local frameCorner = Instance.new("UICorner")
         frameCorner.CornerRadius = UDim.new(0, 4)
         frameCorner.Parent = frame
-
+        
         local label = Instance.new("TextLabel")
         label.Name = "Text"
         label.Size = UDim2.new(0, 82, 0, 42)
@@ -288,7 +255,7 @@ function Library:NewTab(name)
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
         label.Parent = frame
-
+        
         local toggle = Instance.new("ImageButton")
         toggle.Name = "Toggle"
         toggle.Size = UDim2.new(0, 22, 0, 22)
@@ -299,13 +266,13 @@ function Library:NewTab(name)
         toggle.AutoButtonColor = false
         toggle.BorderSizePixel = 0
         toggle.Parent = frame
-
+        
         local toggleCorner = Instance.new("UICorner")
         toggleCorner.CornerRadius = UDim.new(0, 4)
         toggleCorner.Parent = toggle
-
+        
         local debounce = false
-
+        
         function element:Set(value)
             element.Value = value
             TweenService:Create(toggle, TweenInfo.new(0.15), {
@@ -315,7 +282,7 @@ function Library:NewTab(name)
                 element.OnChange(element.Value)
             end
         end
-
+        
         toggle.MouseButton1Click:Connect(function()
             if debounce then return end
             debounce = true
@@ -323,26 +290,26 @@ function Library:NewTab(name)
             task.wait(0.3)
             debounce = false
         end)
-
+        
         return element
     end
-
+    
     function tab:Input(text, placeholder)
         local element = {}
         element.Type = "Input"
         element.Value = ""
-
+        
         local frame = Instance.new("Frame")
         frame.Size = UDim2.new(0, 639, 0, 42)
         frame.BackgroundColor3 = Library.Config.Theme.Darker
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = true
         frame.Parent = tab.Frame
-
+        
         local frameCorner = Instance.new("UICorner")
         frameCorner.CornerRadius = UDim.new(0, 4)
         frameCorner.Parent = frame
-
+        
         local label = Instance.new("TextLabel")
         label.Name = "Text"
         label.Size = UDim2.new(0, 82, 0, 42)
@@ -354,12 +321,12 @@ function Library:NewTab(name)
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
         label.Parent = frame
-
+        
         local input = Instance.new("TextBox")
         input.Name = "Input"
         input.Size = UDim2.new(0, 137, 0, 22)
         input.Position = UDim2.new(0.77499, 0, 0.238, 0)
-        input.BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
+        input.BackgroundColor3 = Library.Config.Theme.Background
         input.TextColor3 = Color3.fromRGB(159, 162, 195)
         input.Text = placeholder or ""
         input.TextSize = 12
@@ -367,21 +334,21 @@ function Library:NewTab(name)
         input.BorderSizePixel = 0
         input.ClearTextOnFocus = false
         input.Parent = frame
-
+        
         local inputCorner = Instance.new("UICorner")
         inputCorner.CornerRadius = UDim.new(0, 4)
         inputCorner.Parent = input
-
+        
         input.FocusLost:Connect(function(enterPressed)
             element.Value = input.Text
             if element.OnChange then
                 element.OnChange(element.Value)
             end
         end)
-
+        
         return element
     end
-
+    
     function tab:Button(text, callback)
         local frame = Instance.new("Frame")
         frame.Size = UDim2.new(0, 639, 0, 42)
@@ -389,11 +356,11 @@ function Library:NewTab(name)
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = true
         frame.Parent = tab.Frame
-
+        
         local frameCorner = Instance.new("UICorner")
         frameCorner.CornerRadius = UDim.new(0, 4)
         frameCorner.Parent = frame
-
+        
         local button = Instance.new("TextButton")
         button.Size = UDim2.new(1, 0, 1, 0)
         button.BackgroundTransparency = 1
@@ -404,13 +371,13 @@ function Library:NewTab(name)
         button.AutoButtonColor = false
         button.BorderSizePixel = 0
         button.Parent = frame
-
+        
         local debounce = false
-
+        
         button.MouseButton1Click:Connect(function()
             if debounce then return end
             debounce = true
-
+            
             -- Button press animation
             TweenService:Create(button, TweenInfo.new(0.1), {
                 TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -419,18 +386,18 @@ function Library:NewTab(name)
             TweenService:Create(button, TweenInfo.new(0.1), {
                 TextColor3 = Library.Config.Theme.Accent
             }):Play()
-
+            
             if callback then
                 callback()
             end
-
+            
             task.wait(0.2)
             debounce = false
         end)
-
+        
         return { Click = callback }
     end
-
+    
     function tab:Label(text)
         local frame = Instance.new("Frame")
         frame.Size = UDim2.new(0, 639, 0, 42)
@@ -438,11 +405,11 @@ function Library:NewTab(name)
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = true
         frame.Parent = tab.Frame
-
+        
         local frameCorner = Instance.new("UICorner")
         frameCorner.CornerRadius = UDim.new(0, 4)
         frameCorner.Parent = frame
-
+        
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1, 0, 1, 0)
         label.BackgroundTransparency = 1
@@ -451,58 +418,53 @@ function Library:NewTab(name)
         label.TextSize = 14
         label.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
         label.Parent = frame
-
+        
         return label
     end
-
+    
     return tab
 end
 
 -- Toggle UI visibility
 local uiOpen = false
 local debounce = false
-local mainPosition = Main.Position
 
--- Toggle UI function
-local function ToggleUI()
+GuiButton.MouseButton1Click:Connect(function()
     if debounce then return end
     debounce = true
-
+    
     uiOpen = not uiOpen
+    Main.Visible = true
     
     if uiOpen then
-        -- Opening animation (slide down from top)
-        Main.Visible = true
+        -- Opening animation (dropdown)
         Main.Size = UDim2.new(0, 650, 0, 0)
-        Main.Position = UDim2.new(mainPosition.X.Scale, mainPosition.X.Offset, mainPosition.Y.Scale, mainPosition.Y.Offset)
-        
+        Main.Position = UDim2.new(0.5, -325, 0.5, 0)
         TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 650, 0, 400)
+            Size = UDim2.new(0, 650, 0, 400),
+            Position = UDim2.new(0.5, -325, 0.5, -200)
         }):Play()
-
+        
         TweenService:Create(GuiButton, TweenInfo.new(0.15), {
             BackgroundColor3 = Color3.fromRGB(20, 20, 26)
         }):Play()
     else
-        -- Closing animation (slide up)
+        -- Closing animation
         TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 650, 0, 0)
+            Size = UDim2.new(0, 650, 0, 0),
+            Position = UDim2.new(0.5, -325, 0.5, 0)
         }):Play()
         task.wait(0.2)
         Main.Visible = false
-        mainPosition = Main.Position
-
+        
         TweenService:Create(GuiButton, TweenInfo.new(0.15), {
-            BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
+            BackgroundColor3 = Library.Config.Theme.Background
         }):Play()
     end
-
+    
     task.wait(0.3)
     debounce = false
-end
-
--- GuiButton click (toggle)
-GuiButton.MouseButton1Click:Connect(ToggleUI)
+end)
 
 -- Hover effects
 GuiButton.MouseEnter:Connect(function()
@@ -514,7 +476,7 @@ end)
 GuiButton.MouseLeave:Connect(function()
     if not uiOpen then
         TweenService:Create(GuiButton, TweenInfo.new(0.15), {
-            BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
+            BackgroundColor3 = Library.Config.Theme.Background
         }):Play()
     end
 end)
