@@ -6,6 +6,8 @@
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 -- Configuration
 Library.Config = {
@@ -21,17 +23,41 @@ Library.Config = {
     AnimationSpeed = 0.3,
 }
 
--- Main GUI
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "rehanceUI"
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+-- Get or create ScreenGui (persists on death)
+local function GetOrCreateScreenGui()
+    local player = Players.LocalPlayer
+    if not player then return nil end
+    
+    local gui = player:FindFirstChild("rehanceUI")
+    if not gui then
+        gui = Instance.new("ScreenGui")
+        gui.Name = "rehanceUI"
+        gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        gui.Parent = player:WaitForChild("PlayerGui")
+        -- ResetOnSpawn false makes it persist on death
+        gui.ResetOnSpawn = false
+    end
+    return gui
+end
+
+-- Create ScreenGui
+local ScreenGui = GetOrCreateScreenGui()
+if not ScreenGui then
+    error("Failed to create ScreenGui")
+end
+
+-- If player respawns, re-parent to new PlayerGui
+Players.LocalPlayer.CharacterAdded:Connect(function()
+    if ScreenGui and ScreenGui.Parent ~= Players.LocalPlayer:FindFirstChild("PlayerGui") then
+        ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+    end
+end)
 
 -- Main Frame
 local Main = Instance.new("Frame")
 Main.Name = "Main"
 Main.Size = UDim2.new(0, 650, 0, 400)
-Main.Position = UDim2.new(0.484, 0, 0.021, 0)  -- Changed position
+Main.Position = UDim2.new(0.5, -325, 0.021, 0)  -- Top center
 Main.BackgroundColor3 = Library.Config.Theme.Background
 Main.BorderSizePixel = 0
 Main.ClipsDescendants = true
@@ -72,7 +98,7 @@ Username.Name = "Username"
 Username.Size = UDim2.new(0, 148, 0, 31)
 Username.Position = UDim2.new(1, -158, 0, 0)
 Username.BackgroundTransparency = 1
-Username.Text = game.Players.LocalPlayer.DisplayName
+Username.Text = Players.LocalPlayer.DisplayName
 Username.TextColor3 = Color3.fromRGB(185, 185, 185)
 Username.TextSize = 14
 Username.TextXAlignment = Enum.TextXAlignment.Right
@@ -112,11 +138,38 @@ TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 TabListLayout.Parent = TabChooser
 
--- Toggle Button (Gui Button)
+-- Close Button (X) - Top right of Main frame
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -35, 0, 0)
+CloseButton.BackgroundTransparency = 1
+CloseButton.Text = "✕"
+CloseButton.TextColor3 = Color3.fromRGB(148, 148, 148)
+CloseButton.TextSize = 18
+CloseButton.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
+CloseButton.AutoButtonColor = false
+CloseButton.BorderSizePixel = 0
+CloseButton.Parent = Main
+
+-- Close button hover effects
+CloseButton.MouseEnter:Connect(function()
+    TweenService:Create(CloseButton, TweenInfo.new(0.15), {
+        TextColor3 = Color3.fromRGB(255, 100, 100)
+    }):Play()
+end)
+
+CloseButton.MouseLeave:Connect(function()
+    TweenService:Create(CloseButton, TweenInfo.new(0.15), {
+        TextColor3 = Color3.fromRGB(148, 148, 148)
+    }):Play()
+end)
+
+-- Toggle Button (Gui Button) - Now top center
 local GuiButton = Instance.new("TextButton")
 GuiButton.Name = "GuiButton"
 GuiButton.Size = UDim2.new(0, 50, 0, 50)
-GuiButton.Position = UDim2.new(0.484, 0, 0.021, 0)  -- Changed position
+GuiButton.Position = UDim2.new(0.5, -25, 0.021, 0)  -- Top center
 GuiButton.BackgroundColor3 = Library.Config.Theme.Background
 GuiButton.Text = "r//h"
 GuiButton.TextColor3 = Library.Config.Theme.Accent
@@ -450,8 +503,33 @@ end
 -- Toggle UI visibility
 local uiOpen = false
 local debounce = false
-local mainPosition = Main.Position  -- Store current position
+local mainPosition = Main.Position
 
+-- Close button function
+local function CloseUI()
+    if debounce then return end
+    debounce = true
+    
+    uiOpen = false
+    TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        Size = UDim2.new(0, 650, 0, 0)
+    }):Play()
+    task.wait(0.2)
+    Main.Visible = false
+    mainPosition = Main.Position
+    
+    TweenService:Create(GuiButton, TweenInfo.new(0.15), {
+        BackgroundColor3 = Library.Config.Theme.Background
+    }):Play()
+    
+    task.wait(0.3)
+    debounce = false
+end
+
+-- Close button click
+CloseButton.MouseButton1Click:Connect(CloseUI)
+
+-- GuiButton click (toggle)
 GuiButton.MouseButton1Click:Connect(function()
     if debounce then return end
     debounce = true
@@ -472,18 +550,7 @@ GuiButton.MouseButton1Click:Connect(function()
             BackgroundColor3 = Color3.fromRGB(20, 20, 26)
         }):Play()
     else
-        -- Closing animation (slide up to top)
-        TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 650, 0, 0)
-        }):Play()
-        task.wait(0.2)
-        Main.Visible = false
-        -- Keep position where it is
-        mainPosition = Main.Position
-
-        TweenService:Create(GuiButton, TweenInfo.new(0.15), {
-            BackgroundColor3 = Library.Config.Theme.Background
-        }):Play()
+        CloseUI()
     end
 
     task.wait(0.3)
