@@ -7,12 +7,11 @@ local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 
 -- Configuration
 Library.Config = {
     Theme = {
-        Background = Color3.fromRGB(25, 25, 31),
+        Background = Color3.fromRGB(24, 24, 30),  -- Updated
         Accent = Color3.fromRGB(148, 162, 255),
         Text = Color3.fromRGB(199, 199, 199),
         Darker = Color3.fromRGB(30, 30, 37),
@@ -34,7 +33,6 @@ local function GetOrCreateScreenGui()
         gui.Name = "rehanceUI"
         gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
         gui.Parent = player:WaitForChild("PlayerGui")
-        -- ResetOnSpawn false makes it persist on death
         gui.ResetOnSpawn = false
     end
     return gui
@@ -57,8 +55,8 @@ end)
 local Main = Instance.new("Frame")
 Main.Name = "Main"
 Main.Size = UDim2.new(0, 650, 0, 400)
-Main.Position = UDim2.new(0.5, -325, 0.021, 0)  -- Top center
-Main.BackgroundColor3 = Library.Config.Theme.Background
+Main.Position = UDim2.new(0.5, -325, 0.021, 0)
+Main.BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
 Main.BorderSizePixel = 0
 Main.ClipsDescendants = true
 Main.Visible = false
@@ -118,7 +116,7 @@ local TabChooser = Instance.new("Frame")
 TabChooser.Name = "TabChooser"
 TabChooser.Size = UDim2.new(0, 215, 0, 30)
 TabChooser.Position = UDim2.new(0.5, -107.5, 1, -35)
-TabChooser.BackgroundColor3 = Library.Config.Theme.Background
+TabChooser.BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
 TabChooser.BorderSizePixel = 0
 TabChooser.ClipsDescendants = true
 TabChooser.Parent = Main
@@ -138,39 +136,12 @@ TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 TabListLayout.Parent = TabChooser
 
--- Close Button (X) - Top right of Main frame
-local CloseButton = Instance.new("TextButton")
-CloseButton.Name = "CloseButton"
-CloseButton.Size = UDim2.new(0, 30, 0, 30)
-CloseButton.Position = UDim2.new(1, -35, 0, 0)
-CloseButton.BackgroundTransparency = 1
-CloseButton.Text = "✕"
-CloseButton.TextColor3 = Color3.fromRGB(148, 148, 148)
-CloseButton.TextSize = 18
-CloseButton.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
-CloseButton.AutoButtonColor = false
-CloseButton.BorderSizePixel = 0
-CloseButton.Parent = Main
-
--- Close button hover effects
-CloseButton.MouseEnter:Connect(function()
-    TweenService:Create(CloseButton, TweenInfo.new(0.15), {
-        TextColor3 = Color3.fromRGB(255, 100, 100)
-    }):Play()
-end)
-
-CloseButton.MouseLeave:Connect(function()
-    TweenService:Create(CloseButton, TweenInfo.new(0.15), {
-        TextColor3 = Color3.fromRGB(148, 148, 148)
-    }):Play()
-end)
-
--- Toggle Button (Gui Button) - Now top center
+-- Toggle Button (Gui Button) - Top center
 local GuiButton = Instance.new("TextButton")
 GuiButton.Name = "GuiButton"
 GuiButton.Size = UDim2.new(0, 50, 0, 50)
-GuiButton.Position = UDim2.new(0.5, -25, 0.021, 0)  -- Top center
-GuiButton.BackgroundColor3 = Library.Config.Theme.Background
+GuiButton.Position = UDim2.new(0.5, -25, 0.021, 0)
+GuiButton.BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
 GuiButton.Text = "r//h"
 GuiButton.TextColor3 = Library.Config.Theme.Accent
 GuiButton.TextSize = 14
@@ -265,36 +236,23 @@ function Library:NewTab(name)
         button.TextColor3 = Color3.fromRGB(107, 107, 107)
     end
 
-    -- Enhanced tab switching with animation
+    -- Simple tab switching (no animation)
     button.MouseButton1Click:Connect(function()
         if currentTab == tab then return end
         
-        -- Animate out current tab
+        -- Hide current tab
         if currentTab then
-            local oldFrame = currentTab.Frame
-            TweenService:Create(oldFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                BackgroundTransparency = 1
-            }):Play()
-            task.wait(0.15)
-            oldFrame.Visible = false
+            currentTab.Frame.Visible = false
         end
         
-        -- Animate in new tab
+        -- Show new tab
         tab.Frame.Visible = true
-        tab.Frame.BackgroundTransparency = 1
-        TweenService:Create(tab.Frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            BackgroundTransparency = 0
-        }):Play()
         
-        -- Update button colors with animation
+        -- Update button colors
         for _, btn in pairs(tabButtons) do
-            TweenService:Create(btn, TweenInfo.new(0.15), {
-                TextColor3 = Color3.fromRGB(107, 107, 107)
-            }):Play()
+            btn.TextColor3 = Color3.fromRGB(107, 107, 107)
         end
-        TweenService:Create(button, TweenInfo.new(0.15), {
-            TextColor3 = Library.Config.Theme.Accent
-        }):Play()
+        button.TextColor3 = Library.Config.Theme.Accent
         
         currentTab = tab
     end)
@@ -401,7 +359,7 @@ function Library:NewTab(name)
         input.Name = "Input"
         input.Size = UDim2.new(0, 137, 0, 22)
         input.Position = UDim2.new(0.77499, 0, 0.238, 0)
-        input.BackgroundColor3 = Library.Config.Theme.Background
+        input.BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
         input.TextColor3 = Color3.fromRGB(159, 162, 195)
         input.Text = placeholder or ""
         input.TextSize = 12
@@ -505,32 +463,8 @@ local uiOpen = false
 local debounce = false
 local mainPosition = Main.Position
 
--- Close button function
-local function CloseUI()
-    if debounce then return end
-    debounce = true
-    
-    uiOpen = false
-    TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-        Size = UDim2.new(0, 650, 0, 0)
-    }):Play()
-    task.wait(0.2)
-    Main.Visible = false
-    mainPosition = Main.Position
-    
-    TweenService:Create(GuiButton, TweenInfo.new(0.15), {
-        BackgroundColor3 = Library.Config.Theme.Background
-    }):Play()
-    
-    task.wait(0.3)
-    debounce = false
-end
-
--- Close button click
-CloseButton.MouseButton1Click:Connect(CloseUI)
-
--- GuiButton click (toggle)
-GuiButton.MouseButton1Click:Connect(function()
+-- Toggle UI function
+local function ToggleUI()
     if debounce then return end
     debounce = true
 
@@ -550,12 +484,25 @@ GuiButton.MouseButton1Click:Connect(function()
             BackgroundColor3 = Color3.fromRGB(20, 20, 26)
         }):Play()
     else
-        CloseUI()
+        -- Closing animation (slide up)
+        TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 650, 0, 0)
+        }):Play()
+        task.wait(0.2)
+        Main.Visible = false
+        mainPosition = Main.Position
+
+        TweenService:Create(GuiButton, TweenInfo.new(0.15), {
+            BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
+        }):Play()
     end
 
     task.wait(0.3)
     debounce = false
-end)
+end
+
+-- GuiButton click (toggle)
+GuiButton.MouseButton1Click:Connect(ToggleUI)
 
 -- Hover effects
 GuiButton.MouseEnter:Connect(function()
@@ -567,7 +514,7 @@ end)
 GuiButton.MouseLeave:Connect(function()
     if not uiOpen then
         TweenService:Create(GuiButton, TweenInfo.new(0.15), {
-            BackgroundColor3 = Library.Config.Theme.Background
+            BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
         }):Play()
     end
 end)
