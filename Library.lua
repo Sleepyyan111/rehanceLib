@@ -10,7 +10,7 @@ local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 
 -- Version
-Library.Version = "1.0.1"
+Library.Version = "1.0.0"
 
 -- Configuration
 Library.Config = {
@@ -59,7 +59,7 @@ end)
 local Main = Instance.new("Frame")
 Main.Name = "Main"
 Main.Size = UDim2.new(0, 650, 0, 400)
-Main.Position = UDim2.new(0.5, -325, 0.5, -200) -- Centered
+Main.Position = UDim2.new(0.5, -325, 0.5, -200)
 Main.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
 Main.BorderSizePixel = 0
 Main.ClipsDescendants = true
@@ -216,16 +216,14 @@ local tabButtons = {}
 local function UpdateTabCanvas(tab)
     if not tab or not tab.ElementContainer or not tab.Layout then return end
     
-    -- Force layout to update
     local contentSize = tab.Layout.AbsoluteContentSize
     
-    -- If content size is 0, try to calculate it manually
     if contentSize.Y == 0 then
         local totalHeight = 0
         local children = tab.ElementContainer:GetChildren()
         for _, child in ipairs(children) do
             if child:IsA("Frame") then
-                totalHeight = totalHeight + child.Size.Y.Offset + 5 -- 5 is the padding
+                totalHeight = totalHeight + child.Size.Y.Offset + 5
             end
         end
         if totalHeight > 0 then
@@ -304,15 +302,12 @@ function Library:NewTab(name)
     button.MouseButton1Click:Connect(function()
         if currentTab == tab then return end
         
-        -- Hide current tab
         if currentTab then
             currentTab.Frame.Visible = false
         end
         
-        -- Show new tab
         tab.Frame.Visible = true
         
-        -- Update button colors
         for _, btn in pairs(tabButtons) do
             btn.TextColor3 = Color3.fromRGB(107, 107, 107)
         end
@@ -320,7 +315,6 @@ function Library:NewTab(name)
         
         currentTab = tab
         
-        -- Update canvas when switching to tab
         task.wait()
         UpdateTabCanvas(tab)
     end)
@@ -397,19 +391,18 @@ function Library:NewTab(name)
             debounce = false
         end)
 
-        -- Force update after adding element
         task.wait()
         UpdateTabCanvas(tab)
 
         return element
     end
 
-    -- Player Input (Auto-completes player usernames)
-    function tab:PlayerInput(text, placeholder)
+    -- Dropdown for custom options
+    function tab:Dropdown(text, options, default)
         local element = {}
-        element.Type = "PlayerInput"
-        element.Value = ""
-        element.Players = {}
+        element.Type = "Dropdown"
+        element.Value = default or options[1] or ""
+        element.Options = options
 
         local frame = Instance.new("Frame")
         frame.Size = UDim2.new(0, 630, 0, 42)
@@ -434,96 +427,89 @@ function Library:NewTab(name)
         label.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
         label.Parent = frame
 
-        local input = Instance.new("TextBox")
-        input.Name = "Input"
-        input.Size = UDim2.new(0, 137, 0, 22)
-        input.Position = UDim2.new(0.775, 0, 0.238, 0)
-        input.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
-        input.TextColor3 = Color3.fromRGB(159, 162, 195)
-        input.Text = placeholder or ""
-        input.TextSize = 12
-        input.TextXAlignment = Enum.TextXAlignment.Center
-        input.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Light)
-        input.BorderSizePixel = 0
-        input.ClearTextOnFocus = false
-        input.Parent = frame
-
-        local inputCorner = Instance.new("UICorner")
-        inputCorner.CornerRadius = UDim.new(0, 4)
-        inputCorner.Parent = input
-
-        -- Dropdown frame for player suggestions
-        local dropdown = Instance.new("Frame")
-        dropdown.Name = "Dropdown"
-        dropdown.Size = UDim2.new(0, 137, 0, 0)
-        dropdown.Position = UDim2.new(0.775, 0, 1, 0)
-        dropdown.BackgroundColor3 = Color3.fromRGB(30, 30, 37)
-        dropdown.BorderSizePixel = 0
-        dropdown.ClipsDescendants = true
-        dropdown.Visible = false
-        dropdown.ZIndex = 2
-        dropdown.Parent = frame
+        -- Dropdown button
+        local dropdownButton = Instance.new("TextButton")
+        dropdownButton.Name = "DropdownButton"
+        dropdownButton.Size = UDim2.new(0, 137, 0, 22)
+        dropdownButton.Position = UDim2.new(0.775, 0, 0.238, 0)
+        dropdownButton.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+        dropdownButton.Text = element.Value
+        dropdownButton.TextColor3 = Color3.fromRGB(159, 162, 195)
+        dropdownButton.TextSize = 12
+        dropdownButton.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Light)
+        dropdownButton.AutoButtonColor = false
+        dropdownButton.BorderSizePixel = 0
+        dropdownButton.Parent = frame
 
         local dropdownCorner = Instance.new("UICorner")
         dropdownCorner.CornerRadius = UDim.new(0, 4)
-        dropdownCorner.Parent = dropdown
+        dropdownCorner.Parent = dropdownButton
 
-        local dropdownStroke = Instance.new("UIStroke")
-        dropdownStroke.Color = Library.Config.Theme.Border
-        dropdownStroke.Parent = dropdown
+        -- Dropdown arrow
+        local arrow = Instance.new("TextLabel")
+        arrow.Size = UDim2.new(0, 20, 1, 0)
+        arrow.Position = UDim2.new(1, -22, 0, 0)
+        arrow.BackgroundTransparency = 1
+        arrow.Text = "▾"
+        arrow.TextColor3 = Color3.fromRGB(107, 107, 107)
+        arrow.TextSize = 12
+        arrow.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
+        arrow.Parent = dropdownButton
 
-        local dropdownLayout = Instance.new("UIListLayout")
-        dropdownLayout.FillDirection = Enum.FillDirection.Vertical
-        dropdownLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        dropdownLayout.Padding = UDim.new(0, 2)
-        dropdownLayout.Parent = dropdown
+        -- Dropdown options frame
+        local optionsFrame = Instance.new("Frame")
+        optionsFrame.Name = "OptionsFrame"
+        optionsFrame.Size = UDim2.new(0, 137, 0, 0)
+        optionsFrame.Position = UDim2.new(0.775, 0, 1, 0)
+        optionsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 37)
+        optionsFrame.BorderSizePixel = 0
+        optionsFrame.ClipsDescendants = true
+        optionsFrame.Visible = false
+        optionsFrame.ZIndex = 2
+        optionsFrame.Parent = frame
 
-        local function UpdateDropdown(searchText)
-            -- Clear existing dropdown items
-            for _, child in pairs(dropdown:GetChildren()) do
+        local optionsCorner = Instance.new("UICorner")
+        optionsCorner.CornerRadius = UDim.new(0, 4)
+        optionsCorner.Parent = optionsFrame
+
+        local optionsStroke = Instance.new("UIStroke")
+        optionsStroke.Color = Library.Config.Theme.Border
+        optionsStroke.Parent = optionsFrame
+
+        local optionsLayout = Instance.new("UIListLayout")
+        optionsLayout.FillDirection = Enum.FillDirection.Vertical
+        optionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        optionsLayout.Padding = UDim.new(0, 2)
+        optionsLayout.Parent = optionsFrame
+
+        -- Function to update dropdown options
+        local function UpdateDropdown()
+            -- Clear existing options
+            for _, child in pairs(optionsFrame:GetChildren()) do
                 if child:IsA("TextButton") then
                     child:Destroy()
                 end
             end
             
-            -- Get all players
-            local players = {}
-            for _, player in ipairs(Players:GetPlayers()) do
-                if player ~= Players.LocalPlayer then
-                    table.insert(players, player.Name)
-                end
-            end
-            table.sort(players)
-            
-            -- Filter players based on search text
-            local searchLower = string.lower(searchText)
-            local matchedPlayers = {}
-            for _, playerName in ipairs(players) do
-                if string.find(string.lower(playerName), searchLower, 1, true) then
-                    table.insert(matchedPlayers, playerName)
-                end
-            end
-            
-            -- Update dropdown height
+            -- Create option buttons
             local maxItems = 5
             local itemHeight = 30
-            local totalItems = math.min(#matchedPlayers, maxItems)
-            dropdown.Size = UDim2.new(0, 137, 0, totalItems * itemHeight + (totalItems - 1) * 2)
+            local totalItems = math.min(#options, maxItems)
+            optionsFrame.Size = UDim2.new(0, 137, 0, totalItems * itemHeight + (totalItems - 1) * 2)
             
-            -- Create dropdown items
             for i = 1, totalItems do
-                local playerName = matchedPlayers[i]
+                local optionText = options[i]
                 local item = Instance.new("TextButton")
                 item.Size = UDim2.new(1, 0, 0, itemHeight)
                 item.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
-                item.Text = playerName
+                item.Text = optionText
                 item.TextColor3 = Color3.fromRGB(199, 199, 199)
                 item.TextSize = 12
                 item.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
                 item.AutoButtonColor = false
                 item.BorderSizePixel = 0
                 item.ZIndex = 3
-                item.Parent = dropdown
+                item.Parent = optionsFrame
                 
                 local itemCorner = Instance.new("UICorner")
                 itemCorner.CornerRadius = UDim.new(0, 3)
@@ -538,16 +524,14 @@ function Library:NewTab(name)
                 end)
                 
                 item.MouseButton1Click:Connect(function()
-                    input.Text = playerName
-                    dropdown.Visible = false
-                    element.Value = playerName
+                    element.Value = optionText
+                    dropdownButton.Text = optionText
+                    optionsFrame.Visible = false
                     if element.OnChange then
                         element.OnChange(element.Value)
                     end
                 end)
             end
-            
-            dropdown.Visible = #matchedPlayers > 0
         end
 
         function element:OnChange(callback)
@@ -555,34 +539,228 @@ function Library:NewTab(name)
             return element
         end
 
-        input.FocusLost:Connect(function(enterPressed)
-            dropdown.Visible = false
-            if enterPressed then
-                element.Value = input.Text
-                if element.OnChange then
-                    element.OnChange(element.Value)
-                end
+        -- Toggle dropdown visibility
+        dropdownButton.MouseButton1Click:Connect(function()
+            optionsFrame.Visible = not optionsFrame.Visible
+            if optionsFrame.Visible then
+                UpdateDropdown()
             end
         end)
 
-        input:GetPropertyChangedSignal("Text"):Connect(function()
-            if input:IsFocused() then
-                UpdateDropdown(input.Text)
-            end
-        end)
+        -- Close dropdown when clicking outside
+        local function CloseDropdown()
+            optionsFrame.Visible = false
+        end
 
-        input.Focused:Connect(function()
-            UpdateDropdown(input.Text)
-        end)
+        -- Initial setup
+        UpdateDropdown()
 
-        -- Force update after adding element
         task.wait()
         UpdateTabCanvas(tab)
 
         return element
     end
 
-    -- Regular Input (kept for compatibility)
+    -- Player Dropdown (auto-populates with player names)
+    function tab:PlayerDropdown(text, default)
+        local element = {}
+        element.Type = "PlayerDropdown"
+        element.Value = default or ""
+        
+        -- Get all players except local
+        local function GetPlayerNames()
+            local names = {}
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= Players.LocalPlayer then
+                    table.insert(names, player.Name)
+                end
+            end
+            table.sort(names)
+            return names
+        end
+
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, 630, 0, 42)
+        frame.BackgroundColor3 = Library.Config.Theme.Darker
+        frame.BorderSizePixel = 0
+        frame.ClipsDescendants = true
+        frame.Parent = tab.ElementContainer
+
+        local frameCorner = Instance.new("UICorner")
+        frameCorner.CornerRadius = UDim.new(0, 4)
+        frameCorner.Parent = frame
+
+        local label = Instance.new("TextLabel")
+        label.Name = "Text"
+        label.Size = UDim2.new(0, 82, 0, 42)
+        label.Position = UDim2.new(0.02, 0, 0, 0)
+        label.BackgroundTransparency = 1
+        label.Text = text
+        label.TextColor3 = Library.Config.Theme.Text
+        label.TextSize = 14
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
+        label.Parent = frame
+
+        -- Dropdown button
+        local dropdownButton = Instance.new("TextButton")
+        dropdownButton.Name = "DropdownButton"
+        dropdownButton.Size = UDim2.new(0, 137, 0, 22)
+        dropdownButton.Position = UDim2.new(0.775, 0, 0.238, 0)
+        dropdownButton.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+        dropdownButton.Text = element.Value or "Select Player..."
+        dropdownButton.TextColor3 = Color3.fromRGB(159, 162, 195)
+        dropdownButton.TextSize = 12
+        dropdownButton.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Light)
+        dropdownButton.AutoButtonColor = false
+        dropdownButton.BorderSizePixel = 0
+        dropdownButton.Parent = frame
+
+        local dropdownCorner = Instance.new("UICorner")
+        dropdownCorner.CornerRadius = UDim.new(0, 4)
+        dropdownCorner.Parent = dropdownButton
+
+        -- Dropdown arrow
+        local arrow = Instance.new("TextLabel")
+        arrow.Size = UDim2.new(0, 20, 1, 0)
+        arrow.Position = UDim2.new(1, -22, 0, 0)
+        arrow.BackgroundTransparency = 1
+        arrow.Text = "▾"
+        arrow.TextColor3 = Color3.fromRGB(107, 107, 107)
+        arrow.TextSize = 12
+        arrow.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
+        arrow.Parent = dropdownButton
+
+        -- Dropdown options frame
+        local optionsFrame = Instance.new("Frame")
+        optionsFrame.Name = "OptionsFrame"
+        optionsFrame.Size = UDim2.new(0, 137, 0, 0)
+        optionsFrame.Position = UDim2.new(0.775, 0, 1, 0)
+        optionsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 37)
+        optionsFrame.BorderSizePixel = 0
+        optionsFrame.ClipsDescendants = true
+        optionsFrame.Visible = false
+        optionsFrame.ZIndex = 2
+        optionsFrame.Parent = frame
+
+        local optionsCorner = Instance.new("UICorner")
+        optionsCorner.CornerRadius = UDim.new(0, 4)
+        optionsCorner.Parent = optionsFrame
+
+        local optionsStroke = Instance.new("UIStroke")
+        optionsStroke.Color = Library.Config.Theme.Border
+        optionsStroke.Parent = optionsFrame
+
+        local optionsLayout = Instance.new("UIListLayout")
+        optionsLayout.FillDirection = Enum.FillDirection.Vertical
+        optionsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        optionsLayout.Padding = UDim.new(0, 2)
+        optionsLayout.Parent = optionsFrame
+
+        -- Function to update player dropdown
+        local function UpdatePlayerDropdown()
+            -- Clear existing options
+            for _, child in pairs(optionsFrame:GetChildren()) do
+                if child:IsA("TextButton") then
+                    child:Destroy()
+                end
+            end
+            
+            local players = GetPlayerNames()
+            
+            -- Create option buttons
+            local maxItems = 5
+            local itemHeight = 30
+            local totalItems = math.min(#players, maxItems)
+            
+            if totalItems == 0 then
+                optionsFrame.Size = UDim2.new(0, 137, 0, 30)
+                local noPlayers = Instance.new("TextLabel")
+                noPlayers.Size = UDim2.new(1, 0, 1, 0)
+                noPlayers.BackgroundTransparency = 1
+                noPlayers.Text = "No players found"
+                noPlayers.TextColor3 = Color3.fromRGB(107, 107, 107)
+                noPlayers.TextSize = 12
+                noPlayers.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
+                noPlayers.ZIndex = 3
+                noPlayers.Parent = optionsFrame
+                return
+            end
+            
+            optionsFrame.Size = UDim2.new(0, 137, 0, totalItems * itemHeight + (totalItems - 1) * 2)
+            
+            for i = 1, totalItems do
+                local playerName = players[i]
+                local item = Instance.new("TextButton")
+                item.Size = UDim2.new(1, 0, 0, itemHeight)
+                item.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+                item.Text = playerName
+                item.TextColor3 = Color3.fromRGB(199, 199, 199)
+                item.TextSize = 12
+                item.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
+                item.AutoButtonColor = false
+                item.BorderSizePixel = 0
+                item.ZIndex = 3
+                item.Parent = optionsFrame
+                
+                local itemCorner = Instance.new("UICorner")
+                itemCorner.CornerRadius = UDim.new(0, 3)
+                itemCorner.Parent = item
+                
+                item.MouseEnter:Connect(function()
+                    item.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+                end)
+                
+                item.MouseLeave:Connect(function()
+                    item.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+                end)
+                
+                item.MouseButton1Click:Connect(function()
+                    element.Value = playerName
+                    dropdownButton.Text = playerName
+                    optionsFrame.Visible = false
+                    if element.OnChange then
+                        element.OnChange(element.Value)
+                    end
+                end)
+            end
+        end
+
+        function element:OnChange(callback)
+            element.OnChange = callback
+            return element
+        end
+
+        -- Toggle dropdown visibility
+        dropdownButton.MouseButton1Click:Connect(function()
+            optionsFrame.Visible = not optionsFrame.Visible
+            if optionsFrame.Visible then
+                UpdatePlayerDropdown()
+            end
+        end)
+
+        -- Update player list when players join/leave
+        Players.PlayerAdded:Connect(function()
+            if optionsFrame.Visible then
+                UpdatePlayerDropdown()
+            end
+        end)
+
+        Players.PlayerRemoving:Connect(function()
+            if optionsFrame.Visible then
+                UpdatePlayerDropdown()
+            end
+        end)
+
+        -- Initial setup
+        UpdatePlayerDropdown()
+
+        task.wait()
+        UpdateTabCanvas(tab)
+
+        return element
+    end
+
     function tab:Input(text, placeholder)
         local element = {}
         element.Type = "Input"
@@ -641,7 +819,6 @@ function Library:NewTab(name)
             end
         end)
 
-        -- Force update after adding element
         task.wait()
         UpdateTabCanvas(tab)
 
@@ -677,7 +854,6 @@ function Library:NewTab(name)
             if debounce then return end
             debounce = true
 
-            -- Button press animation
             TweenService:Create(button, TweenInfo.new(0.1), {
                 TextColor3 = Color3.fromRGB(255, 255, 255)
             }):Play()
@@ -694,7 +870,6 @@ function Library:NewTab(name)
             debounce = false
         end)
 
-        -- Force update after adding element
         task.wait()
         UpdateTabCanvas(tab)
 
@@ -722,7 +897,6 @@ function Library:NewTab(name)
         label.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
         label.Parent = frame
 
-        -- Force update after adding element
         task.wait()
         UpdateTabCanvas(tab)
 
@@ -745,7 +919,6 @@ local function ToggleUI()
     uiOpen = not uiOpen
     
     if uiOpen then
-        -- Opening animation (slide in from center)
         Main.Visible = true
         Main.Size = UDim2.new(0, 650, 0, 0)
         Main.Position = UDim2.new(0.5, -325, 0.5, 0)
@@ -759,13 +932,11 @@ local function ToggleUI()
             BackgroundColor3 = Color3.fromRGB(20, 20, 26)
         }):Play()
         
-        -- Update canvas when opening
         task.wait(0.35)
         if currentTab then
             UpdateTabCanvas(currentTab)
         end
     else
-        -- Closing animation (slide up)
         TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
             Size = UDim2.new(0, 650, 0, 0)
         }):Play()
