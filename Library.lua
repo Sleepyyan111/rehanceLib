@@ -402,7 +402,7 @@ function Library:NewTab(name)
         frame.BackgroundColor3 = Library.Config.Theme.Darker
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = false
-        frame.ZIndex = -1
+        frame.ZIndex = 1  -- Fixed: Changed from -1 to 1
         frame.Parent = tab.ElementContainer
 
         local frameCorner = Instance.new("UICorner")
@@ -442,12 +442,12 @@ function Library:NewTab(name)
         dropdownCorner.CornerRadius = UDim.new(0, 4)
         dropdownCorner.Parent = dropdownButton
 
-        -- Dropdown arrow using ⮃
+        -- Dropdown arrow using ↓
         local arrow = Instance.new("TextLabel")
         arrow.Size = UDim2.new(0, 20, 1, 0)
         arrow.Position = UDim2.new(1, -22, 0, 0)
         arrow.BackgroundTransparency = 1
-        arrow.Text = "↓"
+        arrow.Text = "↓"  -- Changed to ↓
         arrow.TextColor3 = Color3.fromRGB(107, 107, 107)
         arrow.TextSize = 14
         arrow.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
@@ -462,7 +462,7 @@ function Library:NewTab(name)
         optionsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 37)
         optionsFrame.BorderSizePixel = 0
         optionsFrame.ClipsDescendants = true
-        optionsFrame.Visible = true
+        optionsFrame.Visible = false  -- Fixed: Changed to false initially
         optionsFrame.ZIndex = 20
         optionsFrame.Parent = frame
 
@@ -491,9 +491,6 @@ function Library:NewTab(name)
             return totalItems * itemHeight + (totalItems - 1) * 2 + 4
         end
         local targetHeight = GetOptionsHeight()
-
-        -- Initially set size to 0 (hidden)
-        optionsFrame.Size = UDim2.new(0, 137, 0, 0)
 
         -- Function to update dropdown options (without changing size)
         local function UpdateDropdownContent()
@@ -562,7 +559,7 @@ function Library:NewTab(name)
         local function OpenDropdown()
             if element.Open then return end
             element.Open = true
-            arrow.Text = "⮃"
+            arrow.Text = "↑"  -- Arrow points up when open
 
             UpdateDropdownContent()
 
@@ -577,7 +574,7 @@ function Library:NewTab(name)
         local function CloseDropdown()
             if not element.Open then return end
             element.Open = false
-            arrow.Text = "⮃"
+            arrow.Text = "↓"  -- Arrow points down when closed
 
             local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
             local tween = TweenService:Create(optionsFrame, tweenInfo, {
@@ -661,7 +658,7 @@ function Library:NewTab(name)
         frame.BackgroundColor3 = Library.Config.Theme.Darker
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = false
-        Frame.ZIndex = -1
+        frame.ZIndex = 1  -- Fixed: Changed from -1 to 1
         frame.Parent = tab.ElementContainer
 
         local frameCorner = Instance.new("UICorner")
@@ -701,12 +698,12 @@ function Library:NewTab(name)
         dropdownCorner.CornerRadius = UDim.new(0, 4)
         dropdownCorner.Parent = dropdownButton
 
-        -- Dropdown arrow using ⮃
+        -- Dropdown arrow using ↓
         local arrow = Instance.new("TextLabel")
         arrow.Size = UDim2.new(0, 20, 1, 0)
         arrow.Position = UDim2.new(1, -22, 0, 0)
         arrow.BackgroundTransparency = 1
-        arrow.Text = "⮃"
+        arrow.Text = "↓"  -- Changed to ↓
         arrow.TextColor3 = Color3.fromRGB(107, 107, 107)
         arrow.TextSize = 14
         arrow.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
@@ -721,7 +718,7 @@ function Library:NewTab(name)
         optionsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 37)
         optionsFrame.BorderSizePixel = 0
         optionsFrame.ClipsDescendants = true
-        optionsFrame.Visible = true
+        optionsFrame.Visible = false  -- Fixed: Changed to false initially
         optionsFrame.ZIndex = 20
         optionsFrame.Parent = frame
 
@@ -750,9 +747,6 @@ function Library:NewTab(name)
             end
             return totalItems * itemHeight + (totalItems - 1) * 2 + 4
         end
-
-        -- Initially set size to 0 (hidden)
-        optionsFrame.Size = UDim2.new(0, 137, 0, 0)
 
         -- Function to update dropdown content (without changing size)
         local function UpdatePlayerDropdownContent()
@@ -822,7 +816,7 @@ function Library:NewTab(name)
         local function OpenDropdown()
             if element.Open then return end
             element.Open = true
-            arrow.Text = "⮃"
+            arrow.Text = "↑"  -- Arrow points up when open
 
             UpdatePlayerDropdownContent()
             local targetHeight = GetPlayerOptionsHeight()
@@ -838,7 +832,7 @@ function Library:NewTab(name)
         local function CloseDropdown()
             if not element.Open then return end
             element.Open = false
-            arrow.Text = "⮃"
+            arrow.Text = "↓"  -- Arrow points down when closed
 
             local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
             local tween = TweenService:Create(optionsFrame, tweenInfo, {
