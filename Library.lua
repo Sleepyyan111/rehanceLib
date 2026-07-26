@@ -10,7 +10,7 @@ local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 
 -- Version
-Library.Version = "1.0.2"
+Library.Version = "1.0.3"
 
 -- Configuration
 Library.Config = {
