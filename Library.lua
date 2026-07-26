@@ -1,12 +1,16 @@
 --[[
    re//hance UI Library
    A modern, clean UI library for Roblox executors
+   Version: 1.0.0
 ]]
-print("now loading version 0.11")
+
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
+
+-- Version
+Library.Version = "1.0.0"
 
 -- Configuration
 Library.Config = {
@@ -55,7 +59,7 @@ end)
 local Main = Instance.new("Frame")
 Main.Name = "Main"
 Main.Size = UDim2.new(0, 650, 0, 400)
-Main.Position = UDim2.new(0.5, -325, 0.021, 0)
+Main.Position = UDim2.new(0.5, -325, 0.5, -200) -- Centered
 Main.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
 Main.BorderSizePixel = 0
 Main.ClipsDescendants = true
@@ -89,6 +93,19 @@ Title.TextColor3 = Library.Config.Theme.Accent
 Title.TextSize = 14
 Title.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
 Title.Parent = Main
+
+-- Version Label
+local VersionLabel = Instance.new("TextLabel")
+VersionLabel.Name = "VersionLabel"
+VersionLabel.Size = UDim2.new(0, 60, 0, 31)
+VersionLabel.Position = UDim2.new(0, 95, 0, 0)
+VersionLabel.BackgroundTransparency = 1
+VersionLabel.Text = "v" .. Library.Version
+VersionLabel.TextColor3 = Color3.fromRGB(107, 107, 107)
+VersionLabel.TextSize = 11
+VersionLabel.TextXAlignment = Enum.TextXAlignment.Left
+VersionLabel.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
+VersionLabel.Parent = Main
 
 -- Username
 local Username = Instance.new("TextLabel")
@@ -387,6 +404,185 @@ function Library:NewTab(name)
         return element
     end
 
+    -- Player Input (Auto-completes player usernames)
+    function tab:PlayerInput(text, placeholder)
+        local element = {}
+        element.Type = "PlayerInput"
+        element.Value = ""
+        element.Players = {}
+
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, 630, 0, 42)
+        frame.BackgroundColor3 = Library.Config.Theme.Darker
+        frame.BorderSizePixel = 0
+        frame.ClipsDescendants = true
+        frame.Parent = tab.ElementContainer
+
+        local frameCorner = Instance.new("UICorner")
+        frameCorner.CornerRadius = UDim.new(0, 4)
+        frameCorner.Parent = frame
+
+        local label = Instance.new("TextLabel")
+        label.Name = "Text"
+        label.Size = UDim2.new(0, 82, 0, 42)
+        label.Position = UDim2.new(0.02, 0, 0, 0)
+        label.BackgroundTransparency = 1
+        label.Text = text
+        label.TextColor3 = Library.Config.Theme.Text
+        label.TextSize = 14
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
+        label.Parent = frame
+
+        local input = Instance.new("TextBox")
+        input.Name = "Input"
+        input.Size = UDim2.new(0, 137, 0, 22)
+        input.Position = UDim2.new(0.775, 0, 0.238, 0)
+        input.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+        input.TextColor3 = Color3.fromRGB(159, 162, 195)
+        input.Text = placeholder or ""
+        input.TextSize = 12
+        input.TextXAlignment = Enum.TextXAlignment.Center
+        input.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Light)
+        input.BorderSizePixel = 0
+        input.ClearTextOnFocus = false
+        input.Parent = frame
+
+        local inputCorner = Instance.new("UICorner")
+        inputCorner.CornerRadius = UDim.new(0, 4)
+        inputCorner.Parent = input
+
+        -- Dropdown frame for player suggestions
+        local dropdown = Instance.new("Frame")
+        dropdown.Name = "Dropdown"
+        dropdown.Size = UDim2.new(0, 137, 0, 0)
+        dropdown.Position = UDim2.new(0.775, 0, 1, 0)
+        dropdown.BackgroundColor3 = Color3.fromRGB(30, 30, 37)
+        dropdown.BorderSizePixel = 0
+        dropdown.ClipsDescendants = true
+        dropdown.Visible = false
+        dropdown.ZIndex = 2
+        dropdown.Parent = frame
+
+        local dropdownCorner = Instance.new("UICorner")
+        dropdownCorner.CornerRadius = UDim.new(0, 4)
+        dropdownCorner.Parent = dropdown
+
+        local dropdownStroke = Instance.new("UIStroke")
+        dropdownStroke.Color = Library.Config.Theme.Border
+        dropdownStroke.Parent = dropdown
+
+        local dropdownLayout = Instance.new("UIListLayout")
+        dropdownLayout.FillDirection = Enum.FillDirection.Vertical
+        dropdownLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        dropdownLayout.Padding = UDim.new(0, 2)
+        dropdownLayout.Parent = dropdown
+
+        local function UpdateDropdown(searchText)
+            -- Clear existing dropdown items
+            for _, child in pairs(dropdown:GetChildren()) do
+                if child:IsA("TextButton") then
+                    child:Destroy()
+                end
+            end
+            
+            -- Get all players
+            local players = {}
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= Players.LocalPlayer then
+                    table.insert(players, player.Name)
+                end
+            end
+            table.sort(players)
+            
+            -- Filter players based on search text
+            local searchLower = string.lower(searchText)
+            local matchedPlayers = {}
+            for _, playerName in ipairs(players) do
+                if string.find(string.lower(playerName), searchLower, 1, true) then
+                    table.insert(matchedPlayers, playerName)
+                end
+            end
+            
+            -- Update dropdown height
+            local maxItems = 5
+            local itemHeight = 30
+            local totalItems = math.min(#matchedPlayers, maxItems)
+            dropdown.Size = UDim2.new(0, 137, 0, totalItems * itemHeight + (totalItems - 1) * 2)
+            
+            -- Create dropdown items
+            for i = 1, totalItems do
+                local playerName = matchedPlayers[i]
+                local item = Instance.new("TextButton")
+                item.Size = UDim2.new(1, 0, 0, itemHeight)
+                item.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+                item.Text = playerName
+                item.TextColor3 = Color3.fromRGB(199, 199, 199)
+                item.TextSize = 12
+                item.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
+                item.AutoButtonColor = false
+                item.BorderSizePixel = 0
+                item.ZIndex = 3
+                item.Parent = dropdown
+                
+                local itemCorner = Instance.new("UICorner")
+                itemCorner.CornerRadius = UDim.new(0, 3)
+                itemCorner.Parent = item
+                
+                item.MouseEnter:Connect(function()
+                    item.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+                end)
+                
+                item.MouseLeave:Connect(function()
+                    item.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+                end)
+                
+                item.MouseButton1Click:Connect(function()
+                    input.Text = playerName
+                    dropdown.Visible = false
+                    element.Value = playerName
+                    if element.OnChange then
+                        element.OnChange(element.Value)
+                    end
+                end)
+            end
+            
+            dropdown.Visible = #matchedPlayers > 0
+        end
+
+        function element:OnChange(callback)
+            element.OnChange = callback
+            return element
+        end
+
+        input.FocusLost:Connect(function(enterPressed)
+            dropdown.Visible = false
+            if enterPressed then
+                element.Value = input.Text
+                if element.OnChange then
+                    element.OnChange(element.Value)
+                end
+            end
+        end)
+
+        input:GetPropertyChangedSignal("Text"):Connect(function()
+            if input:IsFocused() then
+                UpdateDropdown(input.Text)
+            end
+        end)
+
+        input.Focused:Connect(function()
+            UpdateDropdown(input.Text)
+        end)
+
+        -- Force update after adding element
+        task.wait()
+        UpdateTabCanvas(tab)
+
+        return element
+    end
+
+    -- Regular Input (kept for compatibility)
     function tab:Input(text, placeholder)
         local element = {}
         element.Type = "Input"
@@ -549,13 +745,14 @@ local function ToggleUI()
     uiOpen = not uiOpen
     
     if uiOpen then
-        -- Opening animation (slide down from top)
+        -- Opening animation (slide in from center)
         Main.Visible = true
         Main.Size = UDim2.new(0, 650, 0, 0)
-        Main.Position = UDim2.new(mainPosition.X.Scale, mainPosition.X.Offset, mainPosition.Y.Scale, mainPosition.Y.Offset)
+        Main.Position = UDim2.new(0.5, -325, 0.5, 0)
         
         TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 650, 0, 400)
+            Size = UDim2.new(0, 650, 0, 400),
+            Position = UDim2.new(0.5, -325, 0.5, -200)
         }):Play()
 
         TweenService:Create(GuiButton, TweenInfo.new(0.15), {
@@ -602,6 +799,9 @@ GuiButton.MouseLeave:Connect(function()
         }):Play()
     end
 end)
+
+-- Print version when library loads
+print("re//hance UI Library v" .. Library.Version .. " loaded!")
 
 -- Return library
 return Library
