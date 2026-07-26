@@ -661,7 +661,7 @@ function Library:NewTab(name)
         frame.BackgroundColor3 = Library.Config.Theme.Darker
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = false
-        Frame.Zindex = -1
+        Frame.ZIndex = -1
         frame.Parent = tab.ElementContainer
 
         local frameCorner = Instance.new("UICorner")
