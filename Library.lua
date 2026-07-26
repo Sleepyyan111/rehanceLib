@@ -195,6 +195,33 @@ local tabs = {}
 local currentTab = nil
 local tabButtons = {}
 
+-- Helper function to update canvas size
+local function UpdateTabCanvas(tab)
+    if not tab or not tab.ElementContainer or not tab.Layout then return end
+    
+    -- Force layout to update
+    local contentSize = tab.Layout.AbsoluteContentSize
+    
+    -- If content size is 0, try to calculate it manually
+    if contentSize.Y == 0 then
+        local totalHeight = 0
+        local children = tab.ElementContainer:GetChildren()
+        for _, child in ipairs(children) do
+            if child:IsA("Frame") then
+                totalHeight = totalHeight + child.Size.Y.Offset + 5 -- 5 is the padding
+            end
+        end
+        if totalHeight > 0 then
+            contentSize = Vector2.new(0, totalHeight)
+        end
+    end
+    
+    if contentSize.Y > 0 then
+        tab.ElementContainer.Size = UDim2.new(1, 0, 0, contentSize.Y + 10)
+        tab.Frame.CanvasSize = UDim2.new(0, 0, 0, contentSize.Y + 15)
+    end
+end
+
 -- Create a new tab
 function Library:NewTab(name)
     local tab = {}
@@ -230,9 +257,7 @@ function Library:NewTab(name)
     
     -- Update canvas size when elements are added
     layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        local contentSize = layout.AbsoluteContentSize
-        elementContainer.Size = UDim2.new(1, 0, 0, contentSize.Y + 10)
-        tab.Frame.CanvasSize = UDim2.new(0, 0, 0, contentSize.Y + 15)
+        UpdateTabCanvas(tab)
     end)
     
     tab.ElementContainer = elementContainer
@@ -277,6 +302,10 @@ function Library:NewTab(name)
         button.TextColor3 = Library.Config.Theme.Accent
         
         currentTab = tab
+        
+        -- Update canvas when switching to tab
+        task.wait()
+        UpdateTabCanvas(tab)
     end)
 
     table.insert(tabs, tab)
@@ -338,6 +367,11 @@ function Library:NewTab(name)
             end
         end
 
+        function element:OnChange(callback)
+            element.OnChange = callback
+            return element
+        end
+
         toggle.MouseButton1Click:Connect(function()
             if debounce then return end
             debounce = true
@@ -345,6 +379,10 @@ function Library:NewTab(name)
             task.wait(0.3)
             debounce = false
         end)
+
+        -- Force update after adding element
+        task.wait()
+        UpdateTabCanvas(tab)
 
         return element
     end
@@ -395,12 +433,21 @@ function Library:NewTab(name)
         inputCorner.CornerRadius = UDim.new(0, 4)
         inputCorner.Parent = input
 
+        function element:OnChange(callback)
+            element.OnChange = callback
+            return element
+        end
+
         input.FocusLost:Connect(function(enterPressed)
             element.Value = input.Text
             if element.OnChange then
                 element.OnChange(element.Value)
             end
         end)
+
+        -- Force update after adding element
+        task.wait()
+        UpdateTabCanvas(tab)
 
         return element
     end
@@ -451,6 +498,10 @@ function Library:NewTab(name)
             debounce = false
         end)
 
+        -- Force update after adding element
+        task.wait()
+        UpdateTabCanvas(tab)
+
         return { Click = callback }
     end
 
@@ -474,6 +525,10 @@ function Library:NewTab(name)
         label.TextSize = 14
         label.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
         label.Parent = frame
+
+        -- Force update after adding element
+        task.wait()
+        UpdateTabCanvas(tab)
 
         return label
     end
@@ -506,6 +561,12 @@ local function ToggleUI()
         TweenService:Create(GuiButton, TweenInfo.new(0.15), {
             BackgroundColor3 = Color3.fromRGB(20, 20, 26)
         }):Play()
+        
+        -- Update canvas when opening
+        task.wait(0.35)
+        if currentTab then
+            UpdateTabCanvas(currentTab)
+        end
     else
         -- Closing animation (slide up)
         TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
