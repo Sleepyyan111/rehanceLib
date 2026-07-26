@@ -31,7 +31,7 @@ ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGu
 local Main = Instance.new("Frame")
 Main.Name = "Main"
 Main.Size = UDim2.new(0, 650, 0, 400)
-Main.Position = UDim2.new(0.5, -325, 0.5, -200)
+Main.Position = UDim2.new(0.484, 0, 0.021, 0)  -- Changed position
 Main.BackgroundColor3 = Library.Config.Theme.Background
 Main.BorderSizePixel = 0
 Main.ClipsDescendants = true
@@ -116,7 +116,7 @@ TabListLayout.Parent = TabChooser
 local GuiButton = Instance.new("TextButton")
 GuiButton.Name = "GuiButton"
 GuiButton.Size = UDim2.new(0, 50, 0, 50)
-GuiButton.Position = UDim2.new(0.5, -25, 0.5, -25)
+GuiButton.Position = UDim2.new(0.484, 0, 0.021, 0)  -- Changed position
 GuiButton.BackgroundColor3 = Library.Config.Theme.Background
 GuiButton.Text = "r//h"
 GuiButton.TextColor3 = Library.Config.Theme.Accent
@@ -184,14 +184,14 @@ function Library:NewTab(name)
     tab.Frame.Active = true
     tab.Frame.Parent = TabContainer
     tab.Frame.Visible = false
-    
+
     -- UIListLayout for elements
     local layout = Instance.new("UIListLayout")
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.Padding = UDim.new(0, 3)
     layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.Parent = tab.Frame
-    
+
     -- Create tab button
     local button = Instance.new("TextButton")
     button.Name = "TabButton"
@@ -203,7 +203,7 @@ function Library:NewTab(name)
     button.AutoButtonColor = false
     button.BorderSizePixel = 0
     button.Parent = TabChooser
-    
+
     if not currentTab then
         currentTab = tab
         tab.Frame.Visible = true
@@ -211,39 +211,61 @@ function Library:NewTab(name)
     else
         button.TextColor3 = Color3.fromRGB(107, 107, 107)
     end
-    
+
+    -- Enhanced tab switching with animation
     button.MouseButton1Click:Connect(function()
-        for _, t in pairs(tabs) do
-            t.Frame.Visible = false
+        if currentTab == tab then return end
+        
+        -- Animate out current tab
+        if currentTab then
+            local oldFrame = currentTab.Frame
+            TweenService:Create(oldFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                BackgroundTransparency = 1
+            }):Play()
+            task.wait(0.15)
+            oldFrame.Visible = false
         end
-        for _, btn in pairs(tabButtons) do
-            btn.TextColor3 = Color3.fromRGB(107, 107, 107)
-        end
+        
+        -- Animate in new tab
         tab.Frame.Visible = true
-        button.TextColor3 = Library.Config.Theme.Accent
+        tab.Frame.BackgroundTransparency = 1
+        TweenService:Create(tab.Frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 0
+        }):Play()
+        
+        -- Update button colors with animation
+        for _, btn in pairs(tabButtons) do
+            TweenService:Create(btn, TweenInfo.new(0.15), {
+                TextColor3 = Color3.fromRGB(107, 107, 107)
+            }):Play()
+        end
+        TweenService:Create(button, TweenInfo.new(0.15), {
+            TextColor3 = Library.Config.Theme.Accent
+        }):Play()
+        
         currentTab = tab
     end)
-    
+
     table.insert(tabs, tab)
     table.insert(tabButtons, button)
-    
+
     -- Element creation functions
     function tab:Toggle(text, default)
         local element = {}
         element.Type = "Toggle"
         element.Value = default or false
-        
+
         local frame = Instance.new("Frame")
         frame.Size = UDim2.new(0, 639, 0, 42)
         frame.BackgroundColor3 = Library.Config.Theme.Darker
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = true
         frame.Parent = tab.Frame
-        
+
         local frameCorner = Instance.new("UICorner")
         frameCorner.CornerRadius = UDim.new(0, 4)
         frameCorner.Parent = frame
-        
+
         local label = Instance.new("TextLabel")
         label.Name = "Text"
         label.Size = UDim2.new(0, 82, 0, 42)
@@ -255,7 +277,7 @@ function Library:NewTab(name)
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
         label.Parent = frame
-        
+
         local toggle = Instance.new("ImageButton")
         toggle.Name = "Toggle"
         toggle.Size = UDim2.new(0, 22, 0, 22)
@@ -266,13 +288,13 @@ function Library:NewTab(name)
         toggle.AutoButtonColor = false
         toggle.BorderSizePixel = 0
         toggle.Parent = frame
-        
+
         local toggleCorner = Instance.new("UICorner")
         toggleCorner.CornerRadius = UDim.new(0, 4)
         toggleCorner.Parent = toggle
-        
+
         local debounce = false
-        
+
         function element:Set(value)
             element.Value = value
             TweenService:Create(toggle, TweenInfo.new(0.15), {
@@ -282,7 +304,7 @@ function Library:NewTab(name)
                 element.OnChange(element.Value)
             end
         end
-        
+
         toggle.MouseButton1Click:Connect(function()
             if debounce then return end
             debounce = true
@@ -290,26 +312,26 @@ function Library:NewTab(name)
             task.wait(0.3)
             debounce = false
         end)
-        
+
         return element
     end
-    
+
     function tab:Input(text, placeholder)
         local element = {}
         element.Type = "Input"
         element.Value = ""
-        
+
         local frame = Instance.new("Frame")
         frame.Size = UDim2.new(0, 639, 0, 42)
         frame.BackgroundColor3 = Library.Config.Theme.Darker
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = true
         frame.Parent = tab.Frame
-        
+
         local frameCorner = Instance.new("UICorner")
         frameCorner.CornerRadius = UDim.new(0, 4)
         frameCorner.Parent = frame
-        
+
         local label = Instance.new("TextLabel")
         label.Name = "Text"
         label.Size = UDim2.new(0, 82, 0, 42)
@@ -321,7 +343,7 @@ function Library:NewTab(name)
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
         label.Parent = frame
-        
+
         local input = Instance.new("TextBox")
         input.Name = "Input"
         input.Size = UDim2.new(0, 137, 0, 22)
@@ -334,21 +356,21 @@ function Library:NewTab(name)
         input.BorderSizePixel = 0
         input.ClearTextOnFocus = false
         input.Parent = frame
-        
+
         local inputCorner = Instance.new("UICorner")
         inputCorner.CornerRadius = UDim.new(0, 4)
         inputCorner.Parent = input
-        
+
         input.FocusLost:Connect(function(enterPressed)
             element.Value = input.Text
             if element.OnChange then
                 element.OnChange(element.Value)
             end
         end)
-        
+
         return element
     end
-    
+
     function tab:Button(text, callback)
         local frame = Instance.new("Frame")
         frame.Size = UDim2.new(0, 639, 0, 42)
@@ -356,11 +378,11 @@ function Library:NewTab(name)
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = true
         frame.Parent = tab.Frame
-        
+
         local frameCorner = Instance.new("UICorner")
         frameCorner.CornerRadius = UDim.new(0, 4)
         frameCorner.Parent = frame
-        
+
         local button = Instance.new("TextButton")
         button.Size = UDim2.new(1, 0, 1, 0)
         button.BackgroundTransparency = 1
@@ -371,13 +393,13 @@ function Library:NewTab(name)
         button.AutoButtonColor = false
         button.BorderSizePixel = 0
         button.Parent = frame
-        
+
         local debounce = false
-        
+
         button.MouseButton1Click:Connect(function()
             if debounce then return end
             debounce = true
-            
+
             -- Button press animation
             TweenService:Create(button, TweenInfo.new(0.1), {
                 TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -386,18 +408,18 @@ function Library:NewTab(name)
             TweenService:Create(button, TweenInfo.new(0.1), {
                 TextColor3 = Library.Config.Theme.Accent
             }):Play()
-            
+
             if callback then
                 callback()
             end
-            
+
             task.wait(0.2)
             debounce = false
         end)
-        
+
         return { Click = callback }
     end
-    
+
     function tab:Label(text)
         local frame = Instance.new("Frame")
         frame.Size = UDim2.new(0, 639, 0, 42)
@@ -405,11 +427,11 @@ function Library:NewTab(name)
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = true
         frame.Parent = tab.Frame
-        
+
         local frameCorner = Instance.new("UICorner")
         frameCorner.CornerRadius = UDim.new(0, 4)
         frameCorner.Parent = frame
-        
+
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1, 0, 1, 0)
         label.BackgroundTransparency = 1
@@ -418,50 +440,52 @@ function Library:NewTab(name)
         label.TextSize = 14
         label.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
         label.Parent = frame
-        
+
         return label
     end
-    
+
     return tab
 end
 
 -- Toggle UI visibility
 local uiOpen = false
 local debounce = false
+local mainPosition = Main.Position  -- Store current position
 
 GuiButton.MouseButton1Click:Connect(function()
     if debounce then return end
     debounce = true
-    
+
     uiOpen = not uiOpen
-    Main.Visible = true
     
     if uiOpen then
-        -- Opening animation (dropdown)
+        -- Opening animation (slide down from top)
+        Main.Visible = true
         Main.Size = UDim2.new(0, 650, 0, 0)
-        Main.Position = UDim2.new(0.5, -325, 0.5, 0)
-        TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 650, 0, 400),
-            Position = UDim2.new(0.5, -325, 0.5, -200)
-        }):Play()
+        Main.Position = UDim2.new(mainPosition.X.Scale, mainPosition.X.Offset, mainPosition.Y.Scale, mainPosition.Y.Offset)
         
+        TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 650, 0, 400)
+        }):Play()
+
         TweenService:Create(GuiButton, TweenInfo.new(0.15), {
             BackgroundColor3 = Color3.fromRGB(20, 20, 26)
         }):Play()
     else
-        -- Closing animation
+        -- Closing animation (slide up to top)
         TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 650, 0, 0),
-            Position = UDim2.new(0.5, -325, 0.5, 0)
+            Size = UDim2.new(0, 650, 0, 0)
         }):Play()
         task.wait(0.2)
         Main.Visible = false
-        
+        -- Keep position where it is
+        mainPosition = Main.Position
+
         TweenService:Create(GuiButton, TweenInfo.new(0.15), {
             BackgroundColor3 = Library.Config.Theme.Background
         }):Play()
     end
-    
+
     task.wait(0.3)
     debounce = false
 end)
