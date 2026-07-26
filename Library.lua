@@ -146,7 +146,7 @@ GuiButton.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
 GuiButton.Text = "r//h"
 GuiButton.TextColor3 = Library.Config.Theme.Accent
 GuiButton.TextSize = 14
-GuiButton.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json") -- Fixed: Added font
+GuiButton.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json")
 GuiButton.AutoButtonColor = false
 GuiButton.BorderSizePixel = 0
 GuiButton.Parent = ScreenGui
@@ -200,6 +200,8 @@ function Library:NewTab(name)
     local tab = {}
     tab.Name = name
     tab.Elements = {}
+    
+    -- Create tab frame
     tab.Frame = Instance.new("ScrollingFrame")
     tab.Frame.Name = name
     tab.Frame.Size = UDim2.new(1, 0, 1, -5)
@@ -208,15 +210,33 @@ function Library:NewTab(name)
     tab.Frame.ScrollBarThickness = 2
     tab.Frame.ScrollBarImageTransparency = 0.61
     tab.Frame.Active = true
+    tab.Frame.CanvasSize = UDim2.new(0, 0, 0, 0)
     tab.Frame.Parent = TabContainer
     tab.Frame.Visible = false
 
+    -- Create a container frame for elements with UIListLayout
+    local elementContainer = Instance.new("Frame")
+    elementContainer.Name = "ElementContainer"
+    elementContainer.Size = UDim2.new(1, 0, 0, 0)
+    elementContainer.BackgroundTransparency = 1
+    elementContainer.Parent = tab.Frame
+    
     -- UIListLayout for elements
     local layout = Instance.new("UIListLayout")
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.Padding = UDim.new(0, 5) -- Fixed: Increased padding
+    layout.Padding = UDim.new(0, 5)
     layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Parent = tab.Frame
+    layout.Parent = elementContainer
+    
+    -- Update canvas size when elements are added
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        local contentSize = layout.AbsoluteContentSize
+        elementContainer.Size = UDim2.new(1, 0, 0, contentSize.Y + 10)
+        tab.Frame.CanvasSize = UDim2.new(0, 0, 0, contentSize.Y + 15)
+    end)
+    
+    tab.ElementContainer = elementContainer
+    tab.Layout = layout
 
     -- Create tab button
     local button = Instance.new("TextButton")
@@ -238,7 +258,7 @@ function Library:NewTab(name)
         button.TextColor3 = Color3.fromRGB(107, 107, 107)
     end
 
-    -- Simple tab switching (no animation)
+    -- Tab switching
     button.MouseButton1Click:Connect(function()
         if currentTab == tab then return end
         
@@ -269,11 +289,11 @@ function Library:NewTab(name)
         element.Value = default or false
 
         local frame = Instance.new("Frame")
-        frame.Size = UDim2.new(0, 639, 0, 42)
+        frame.Size = UDim2.new(0, 630, 0, 42)
         frame.BackgroundColor3 = Library.Config.Theme.Darker
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = true
-        frame.Parent = tab.Frame
+        frame.Parent = tab.ElementContainer
 
         local frameCorner = Instance.new("UICorner")
         frameCorner.CornerRadius = UDim.new(0, 4)
@@ -282,7 +302,7 @@ function Library:NewTab(name)
         local label = Instance.new("TextLabel")
         label.Name = "Text"
         label.Size = UDim2.new(0, 82, 0, 42)
-        label.Position = UDim2.new(0.01749, 0, 0, 0)
+        label.Position = UDim2.new(0.02, 0, 0, 0)
         label.BackgroundTransparency = 1
         label.Text = text
         label.TextColor3 = Library.Config.Theme.Text
@@ -294,7 +314,7 @@ function Library:NewTab(name)
         local toggle = Instance.new("ImageButton")
         toggle.Name = "Toggle"
         toggle.Size = UDim2.new(0, 22, 0, 22)
-        toggle.Position = UDim2.new(0.944, 0, 0.238, 0)
+        toggle.Position = UDim2.new(0.945, 0, 0.238, 0)
         toggle.BackgroundColor3 = element.Value and Library.Config.Theme.ToggleOn or Library.Config.Theme.ToggleOff
         toggle.Image = "rbxassetid://0"
         toggle.ImageTransparency = 1
@@ -335,11 +355,11 @@ function Library:NewTab(name)
         element.Value = ""
 
         local frame = Instance.new("Frame")
-        frame.Size = UDim2.new(0, 639, 0, 42)
+        frame.Size = UDim2.new(0, 630, 0, 42)
         frame.BackgroundColor3 = Library.Config.Theme.Darker
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = true
-        frame.Parent = tab.Frame
+        frame.Parent = tab.ElementContainer
 
         local frameCorner = Instance.new("UICorner")
         frameCorner.CornerRadius = UDim.new(0, 4)
@@ -348,7 +368,7 @@ function Library:NewTab(name)
         local label = Instance.new("TextLabel")
         label.Name = "Text"
         label.Size = UDim2.new(0, 82, 0, 42)
-        label.Position = UDim2.new(0.01749, 0, 0, 0)
+        label.Position = UDim2.new(0.02, 0, 0, 0)
         label.BackgroundTransparency = 1
         label.Text = text
         label.TextColor3 = Library.Config.Theme.Text
@@ -360,12 +380,12 @@ function Library:NewTab(name)
         local input = Instance.new("TextBox")
         input.Name = "Input"
         input.Size = UDim2.new(0, 137, 0, 22)
-        input.Position = UDim2.new(0.77499, 0, 0.238, 0)
+        input.Position = UDim2.new(0.775, 0, 0.238, 0)
         input.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
         input.TextColor3 = Color3.fromRGB(159, 162, 195)
         input.Text = placeholder or ""
         input.TextSize = 12
-        input.TextXAlignment = Enum.TextXAlignment.Center -- Fixed: Centered text
+        input.TextXAlignment = Enum.TextXAlignment.Center
         input.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Light)
         input.BorderSizePixel = 0
         input.ClearTextOnFocus = false
@@ -387,11 +407,11 @@ function Library:NewTab(name)
 
     function tab:Button(text, callback)
         local frame = Instance.new("Frame")
-        frame.Size = UDim2.new(0, 639, 0, 42)
+        frame.Size = UDim2.new(0, 630, 0, 42)
         frame.BackgroundColor3 = Library.Config.Theme.Darker
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = true
-        frame.Parent = tab.Frame
+        frame.Parent = tab.ElementContainer
 
         local frameCorner = Instance.new("UICorner")
         frameCorner.CornerRadius = UDim.new(0, 4)
@@ -436,11 +456,11 @@ function Library:NewTab(name)
 
     function tab:Label(text)
         local frame = Instance.new("Frame")
-        frame.Size = UDim2.new(0, 639, 0, 42)
+        frame.Size = UDim2.new(0, 630, 0, 42)
         frame.BackgroundColor3 = Library.Config.Theme.Darker
         frame.BorderSizePixel = 0
         frame.ClipsDescendants = true
-        frame.Parent = tab.Frame
+        frame.Parent = tab.ElementContainer
 
         local frameCorner = Instance.new("UICorner")
         frameCorner.CornerRadius = UDim.new(0, 4)
