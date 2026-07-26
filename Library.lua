@@ -11,7 +11,7 @@ local Players = game:GetService("Players")
 -- Configuration
 Library.Config = {
     Theme = {
-        Background = Color3.fromRGB(24, 24, 30),  -- Updated
+        Background = Color3.fromRGB(24, 24, 30),
         Accent = Color3.fromRGB(148, 162, 255),
         Text = Color3.fromRGB(199, 199, 199),
         Darker = Color3.fromRGB(30, 30, 37),
@@ -56,7 +56,7 @@ local Main = Instance.new("Frame")
 Main.Name = "Main"
 Main.Size = UDim2.new(0, 650, 0, 400)
 Main.Position = UDim2.new(0.5, -325, 0.021, 0)
-Main.BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
+Main.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
 Main.BorderSizePixel = 0
 Main.ClipsDescendants = true
 Main.Visible = false
@@ -93,8 +93,8 @@ Title.Parent = Main
 -- Username
 local Username = Instance.new("TextLabel")
 Username.Name = "Username"
-Username.Size = UDim2.new(0, 148, 0, 31)
-Username.Position = UDim2.new(1, -158, 0, 0)
+Username.Size = UDim2.new(0, 150, 0, 31)
+Username.Position = UDim2.new(1, -160, 0, 0)
 Username.BackgroundTransparency = 1
 Username.Text = Players.LocalPlayer.DisplayName
 Username.TextColor3 = Color3.fromRGB(185, 185, 185)
@@ -116,7 +116,7 @@ local TabChooser = Instance.new("Frame")
 TabChooser.Name = "TabChooser"
 TabChooser.Size = UDim2.new(0, 215, 0, 30)
 TabChooser.Position = UDim2.new(0.5, -107.5, 1, -35)
-TabChooser.BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
+TabChooser.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
 TabChooser.BorderSizePixel = 0
 TabChooser.ClipsDescendants = true
 TabChooser.Parent = Main
@@ -134,6 +134,7 @@ local TabListLayout = Instance.new("UIListLayout")
 TabListLayout.FillDirection = Enum.FillDirection.Horizontal
 TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+TabListLayout.Padding = UDim.new(0, 2)
 TabListLayout.Parent = TabChooser
 
 -- Toggle Button (Gui Button) - Top center
@@ -141,10 +142,11 @@ local GuiButton = Instance.new("TextButton")
 GuiButton.Name = "GuiButton"
 GuiButton.Size = UDim2.new(0, 50, 0, 50)
 GuiButton.Position = UDim2.new(0.5, -25, 0.07, 0)
-GuiButton.BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
+GuiButton.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
 GuiButton.Text = "r//h"
 GuiButton.TextColor3 = Library.Config.Theme.Accent
 GuiButton.TextSize = 14
+GuiButton.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json") -- Fixed: Added font
 GuiButton.AutoButtonColor = false
 GuiButton.BorderSizePixel = 0
 GuiButton.Parent = ScreenGui
@@ -212,7 +214,7 @@ function Library:NewTab(name)
     -- UIListLayout for elements
     local layout = Instance.new("UIListLayout")
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.Padding = UDim.new(0, 3)
+    layout.Padding = UDim.new(0, 5) -- Fixed: Increased padding
     layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.Parent = tab.Frame
 
@@ -359,10 +361,11 @@ function Library:NewTab(name)
         input.Name = "Input"
         input.Size = UDim2.new(0, 137, 0, 22)
         input.Position = UDim2.new(0.77499, 0, 0.238, 0)
-        input.BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
+        input.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
         input.TextColor3 = Color3.fromRGB(159, 162, 195)
         input.Text = placeholder or ""
         input.TextSize = 12
+        input.TextXAlignment = Enum.TextXAlignment.Center -- Fixed: Centered text
         input.FontFace = Font.new("rbxasset://fonts/families/Ubuntu.json", Enum.FontWeight.Light)
         input.BorderSizePixel = 0
         input.ClearTextOnFocus = false
@@ -493,7 +496,7 @@ local function ToggleUI()
         mainPosition = Main.Position
 
         TweenService:Create(GuiButton, TweenInfo.new(0.15), {
-            BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
+            BackgroundColor3 = Color3.fromRGB(24, 24, 30)
         }):Play()
     end
 
@@ -514,7 +517,7 @@ end)
 GuiButton.MouseLeave:Connect(function()
     if not uiOpen then
         TweenService:Create(GuiButton, TweenInfo.new(0.15), {
-            BackgroundColor3 = Color3.fromRGB(24, 24, 30)  -- Updated
+            BackgroundColor3 = Color3.fromRGB(24, 24, 30)
         }):Play()
     end
 end)
