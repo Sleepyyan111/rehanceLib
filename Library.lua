@@ -499,7 +499,7 @@ function Library:NewTab(name, icon)
             Size = UDim2.new(0, 20, 1, 0),
             Position = UDim2.new(1, -22, 0, 0),
             BackgroundTransparency = 1,
-            Text = "↓",
+            Text = " ",
             TextColor3 = Color3.fromRGB(107, 107, 107),
             TextSize = 14,
             Font = Enum.Font.Gotham,
@@ -594,7 +594,7 @@ function Library:NewTab(name, icon)
         local function CloseDropdown()
             if not element.Open then return end
             element.Open = false
-            arrow.Text = "↓"
+            arrow.Text = " "
             local tween = TweenService:Create(optionsFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
                 Size = UDim2.new(0, 120, 0, 0),
             })
@@ -605,7 +605,7 @@ function Library:NewTab(name, icon)
         local function OpenDropdown()
             if element.Open then return end
             element.Open = true
-            arrow.Text = "↑"
+            arrow.Text = " "
             PopulateOptions(optionsFrame, options, function(optionText)
                 element.Value = optionText
                 dropdownButton.Text = optionText
@@ -674,7 +674,7 @@ function Library:NewTab(name, icon)
         local function CloseDropdown()
             if not element.Open then return end
             element.Open = false
-            arrow.Text = "↓"
+            arrow.Text = " "
             local tween = TweenService:Create(optionsFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
                 Size = UDim2.new(0, 137, 0, 0),
             })
@@ -694,7 +694,7 @@ function Library:NewTab(name, icon)
         local function OpenDropdown()
             if element.Open then return end
             element.Open = true
-            arrow.Text = "↑"
+            arrow.Text = " "
             RefreshContent()
             optionsFrame.Visible = true
             TweenService:Create(optionsFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
