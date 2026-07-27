@@ -213,6 +213,22 @@ local UIPageLayout = Utility.new("UIPageLayout", {
     TouchInputEnabled = false,
 })
 
+-- Shared invisible click-catcher used to close any open dropdown when the
+-- user clicks outside of it. This avoids doing manual pixel-math against
+-- AbsolutePosition/AbsoluteSize (which raced against the open/close tweens
+-- and caused dropdown selections to randomly fail).
+local DropdownCatcher = Utility.new("TextButton", {
+    Name = "DropdownCatcher",
+    Parent = ScreenGui,
+    Size = UDim2.new(1, 0, 1, 0),
+    Position = UDim2.new(0, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Text = "",
+    AutoButtonColor = false,
+    ZIndex = 10,
+    Visible = false,
+})
+
 local GuiButton = Utility.Panel({
     Name = "GuiButton",
     Parent = ScreenGui,
@@ -515,47 +531,70 @@ function Library:NewTab(name, icon)
             Visible = false,
             ZIndex = 20,
         }, {
-                Utility.new("UICorner", { CornerRadius = UDim.new(0, 3) }),
+            Utility.new("UICorner", { CornerRadius = UDim.new(0, 3) }),
             Utility.new("UIStroke", { Color = Library.Config.Theme.Border }),
+        })
+
+        local optionsScroller = Utility.new("ScrollingFrame", {
+            Name = "OptionsScroller",
+            Parent = optionsFrame,
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            ScrollBarThickness = 3,
+            ScrollBarImageTransparency = 0.4,
+            CanvasSize = UDim2.new(0, 0, 0, 0),
+            ZIndex = 21,
+        }, {
             Utility.new("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Padding = UDim.new(0, 2),
             }),
+            Utility.new("UIPadding", {
+                PaddingLeft = UDim.new(0, 2),
+                PaddingRight = UDim.new(0, 2),
+                PaddingTop = UDim.new(0, 2),
+            }),
         })
+
         dropdownButton.ZIndex = 11
         arrow.ZIndex = 12
         optionsFrame.ZIndex = 20
 
-        return frame, dropdownButton, arrow, optionsFrame
+        return frame, dropdownButton, arrow, optionsFrame, optionsScroller
     end
 
-    local function PopulateOptions(optionsFrame, list, onPick, emptyText)
-        for _, child in pairs(optionsFrame:GetChildren()) do
+    -- Populates a dropdown's scrolling list with ALL items (no artificial
+    -- cap) and sizes the canvas so the ScrollingFrame can scroll through
+    -- the full list, showing a fixed number of rows at a time.
+    local function PopulateOptions(scroller, list, onPick, emptyText)
+        for _, child in pairs(scroller:GetChildren()) do
             if child:IsA("TextButton") then child:Destroy() end
         end
 
-        local maxItems, itemHeight = 5, 28
-        local totalItems = math.min(#list, maxItems)
+        local itemHeight = 28
+        local totalItems = #list
 
         if totalItems == 0 then
             Utility.new("TextLabel", {
-                Parent = optionsFrame,
-                Size = UDim2.new(1, 0, 1, 0),
+                Parent = scroller,
+                Size = UDim2.new(1, 0, 0, 28),
                 BackgroundTransparency = 1,
                 Text = emptyText or "No options",
                 TextColor3 = Color3.fromRGB(107, 107, 107),
                 TextSize = 12,
                 Font = Enum.Font.Gotham,
-                ZIndex = 21,
+                ZIndex = 22,
             })
+            scroller.CanvasSize = UDim2.new(0, 0, 0, 0)
             return totalItems
         end
 
         for i = 1, totalItems do
             local optionText = list[i]
             local item = Utility.new("TextButton", {
-                Parent = optionsFrame,
-                Size = UDim2.new(1, 0, 0, itemHeight),
+                Parent = scroller,
+                Size = UDim2.new(1, -4, 0, itemHeight),
                 BackgroundColor3 = Color3.fromRGB(24, 24, 30),
                 Text = optionText,
                 TextColor3 = Color3.fromRGB(199, 199, 199),
@@ -563,7 +602,7 @@ function Library:NewTab(name, icon)
                 Font = Enum.Font.Gotham,
                 AutoButtonColor = false,
                 BorderSizePixel = 0,
-                ZIndex = 21,
+                ZIndex = 22,
             }, {
                 Utility.new("UICorner", { CornerRadius = UDim.new(0, 3) }),
             })
@@ -572,6 +611,8 @@ function Library:NewTab(name, icon)
             item.MouseLeave:Connect(function() item.BackgroundColor3 = Color3.fromRGB(24, 24, 30) end)
             item.MouseButton1Click:Connect(function() onPick(optionText) end)
         end
+
+        scroller.CanvasSize = UDim2.new(0, 0, 0, totalItems * itemHeight + (totalItems - 1) * 2 + 4)
         return totalItems
     end
 
@@ -583,7 +624,8 @@ function Library:NewTab(name, icon)
         element.Open = false
         element.OnChange = nil
 
-        local frame, dropdownButton, arrow, optionsFrame = DropdownBase(text, element.Value)
+        local frame, dropdownButton, arrow, optionsFrame, optionsScroller = DropdownBase(text, element.Value)
+        local catcherConn = nil
 
         local function GetHeight()
             local totalItems = math.min(#options, 5)
@@ -595,6 +637,11 @@ function Library:NewTab(name, icon)
             if not element.Open then return end
             element.Open = false
             arrow.Text = " "
+            DropdownCatcher.Visible = false
+            if catcherConn then
+                catcherConn:Disconnect()
+                catcherConn = nil
+            end
             local tween = TweenService:Create(optionsFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
                 Size = UDim2.new(0, 120, 0, 0),
             })
@@ -606,13 +653,15 @@ function Library:NewTab(name, icon)
             if element.Open then return end
             element.Open = true
             arrow.Text = " "
-            PopulateOptions(optionsFrame, options, function(optionText)
+            PopulateOptions(optionsScroller, options, function(optionText)
                 element.Value = optionText
                 dropdownButton.Text = optionText
                 CloseDropdown()
                 if element.OnChange then element.OnChange(element.Value) end
             end)
             optionsFrame.Visible = true
+            DropdownCatcher.Visible = true
+            catcherConn = DropdownCatcher.MouseButton1Click:Connect(CloseDropdown)
             TweenService:Create(optionsFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, 120, 0, GetHeight()),
             }):Play()
@@ -627,21 +676,8 @@ function Library:NewTab(name, icon)
             if element.Open then CloseDropdown() else OpenDropdown() end
         end)
 
-        UserInputService.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 and element.Open then
-                local mousePos = UserInputService:GetMouseLocation()
-                local absPos, absSize = optionsFrame.AbsolutePosition, optionsFrame.AbsoluteSize
-                local bPos, bSize = dropdownButton.AbsolutePosition, dropdownButton.AbsoluteSize
-
-                local outsideOptions = not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y)
-                local outsideButton = not (mousePos.X >= bPos.X and mousePos.X <= bPos.X + bSize.X and mousePos.Y >= bPos.Y and mousePos.Y <= bPos.Y + bSize.Y)
-
-                if outsideOptions and outsideButton then CloseDropdown() end
-            end
-        end)
-
         task.wait()
-        PopulateOptions(optionsFrame, options, function() end)
+        PopulateOptions(optionsScroller, options, function() end)
         task.wait()
         UpdateTabCanvas(tab)
         return element
@@ -663,7 +699,8 @@ function Library:NewTab(name, icon)
             return names
         end
 
-        local frame, dropdownButton, arrow, optionsFrame = DropdownBase(text, element.Value ~= "" and element.Value or "Select Player...")
+        local frame, dropdownButton, arrow, optionsFrame, optionsScroller = DropdownBase(text, element.Value ~= "" and element.Value or "Select Player...")
+        local catcherConn = nil
 
         local function GetHeight()
             local totalItems = math.min(#GetPlayerNames(), 5)
@@ -675,6 +712,11 @@ function Library:NewTab(name, icon)
             if not element.Open then return end
             element.Open = false
             arrow.Text = " "
+            DropdownCatcher.Visible = false
+            if catcherConn then
+                catcherConn:Disconnect()
+                catcherConn = nil
+            end
             local tween = TweenService:Create(optionsFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
                 Size = UDim2.new(0, 120, 0, 0),
             })
@@ -683,7 +725,7 @@ function Library:NewTab(name, icon)
         end
 
         local function RefreshContent()
-            PopulateOptions(optionsFrame, GetPlayerNames(), function(playerName)
+            PopulateOptions(optionsScroller, GetPlayerNames(), function(playerName)
                 element.Value = playerName
                 dropdownButton.Text = playerName
                 CloseDropdown()
@@ -697,6 +739,8 @@ function Library:NewTab(name, icon)
             arrow.Text = " "
             RefreshContent()
             optionsFrame.Visible = true
+            DropdownCatcher.Visible = true
+            catcherConn = DropdownCatcher.MouseButton1Click:Connect(CloseDropdown)
             TweenService:Create(optionsFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                 Size = UDim2.new(0, 120, 0, GetHeight()),
             }):Play()
@@ -709,19 +753,6 @@ function Library:NewTab(name, icon)
 
         dropdownButton.MouseButton1Click:Connect(function()
             if element.Open then CloseDropdown() else OpenDropdown() end
-        end)
-
-        UserInputService.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 and element.Open then
-                local mousePos = UserInputService:GetMouseLocation()
-                local absPos, absSize = optionsFrame.AbsolutePosition, optionsFrame.AbsoluteSize
-                local bPos, bSize = dropdownButton.AbsolutePosition, dropdownButton.AbsoluteSize
-
-                local outsideOptions = not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y)
-                local outsideButton = not (mousePos.X >= bPos.X and mousePos.X <= bPos.X + bSize.X and mousePos.Y >= bPos.Y and mousePos.Y <= bPos.Y + bSize.Y)
-
-                if outsideOptions and outsideButton then CloseDropdown() end
-            end
         end)
 
         Players.PlayerAdded:Connect(function()
