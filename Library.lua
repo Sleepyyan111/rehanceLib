@@ -15,7 +15,7 @@ Library.Config = {
         Darker = Color3.fromRGB(30, 30, 37),
         ToggleOff = Color3.fromRGB(41, 41, 51),
         ToggleOn = Color3.fromRGB(148, 162, 255),
-        Border = Color3.fromRGB(45, 45, 45),
+        Border = Color3.fromRGB(37, 37, 46),
     },
     AnimationSpeed = 0.3,
 }
