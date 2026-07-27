@@ -481,7 +481,7 @@ function Library:NewTab(name, icon)
         local dropdownButton = Utility.new("TextButton", {
             Name = "DropdownButton",
             Parent = frame,
-            Size = UDim2.new(0, 137, 0, 22),
+            Size = UDim2.new(0, 120, 0, 22),
             Position = UDim2.new(0.72, 0, 0.238, 0),
             BackgroundColor3 = Library.Config.Theme.Background,
             Text = initialValue,
