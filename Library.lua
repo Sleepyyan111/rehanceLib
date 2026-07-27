@@ -1,25 +1,11 @@
---[[
-   re//hance UI Library
-   A modern, clean UI library for Roblox executors
-   Version: 2.0.0 — Sidebar Edition
-
-   Restyled to use:
-     - A left sidebar for tab navigation (icon + title, like Elerium/Luminosity)
-     - 9-slice ImageLabel/ImageButton panels instead of Frame+UICorner
-     - Smooth tween-based dragging
-     - UIPageLayout tab switching instead of Visible toggling
-]]
-
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local TextService = game:GetService("TextService")
 
--- Version
 Library.Version = "2.0.0"
 
--- Configuration / Theme
 Library.Config = {
     Theme = {
         Background = Color3.fromRGB(24, 24, 30),
@@ -34,12 +20,9 @@ Library.Config = {
     AnimationSpeed = 0.3,
 }
 
--- Shared 9-slice rounded-rect asset (same one Elerium/Luminosity use for panels)
 local SLICE_IMAGE = "rbxassetid://3570695787"
 local SLICE_RECT = Rect.new(100, 100, 100, 100)
 local SLICE_SCALE = 0.1
-
--- // Utility \\ -----------------------------------------------------------
 
 local Utility = {}
 
@@ -93,8 +76,6 @@ function Utility.Tween(Object, Info, Goal)
     })
 end
 
--- // ScreenGui \\ -----------------------------------------------------------
-
 local function GetOrCreateScreenGui()
     local player = Players.LocalPlayer
     if not player then return nil end
@@ -123,8 +104,6 @@ Players.LocalPlayer.CharacterAdded:Connect(function()
     end
 end)
 
--- // Main Window Frame \\ ----------------------------------------------------
-
 local Main = Utility.Panel({
     Name = "Main",
     Parent = ScreenGui,
@@ -138,7 +117,6 @@ local Main = Utility.Panel({
 }, {
 })
 
--- SideBar (tab navigation, icon + title header, like Elerium/Luminosity)
 local SideBar = Utility.Panel({
     Name = "SideBar",
     Parent = Main,
@@ -146,7 +124,6 @@ local SideBar = Utility.Panel({
     ImageColor3 = Library.Config.Theme.SideBar,
 }, {})
 
--- Header block: logo, title, subtitle, divider
 local Info = Utility.new("Frame", {
     Name = "Info",
     Parent = SideBar,
@@ -187,7 +164,6 @@ local Info = Utility.new("Frame", {
     }),
 })
 
--- Username, mirrored from the old top-right label, now under the header
 local Username = Utility.new("TextLabel", {
     Name = "Username",
     Parent = SideBar,
@@ -201,7 +177,6 @@ local Username = Utility.new("TextLabel", {
     TextXAlignment = Enum.TextXAlignment.Center,
 })
 
--- Tab list container (buttons stack here)
 local TabList = Utility.new("Frame", {
     Name = "TabList",
     Parent = SideBar,
@@ -219,7 +194,6 @@ local TabList = Utility.new("Frame", {
     }),
 })
 
--- Content area (right side) with UIPageLayout for tab switching
 local Contents = Utility.new("Frame", {
     Name = "Contents",
     Parent = Main,
@@ -239,7 +213,6 @@ local UIPageLayout = Utility.new("UIPageLayout", {
     TouchInputEnabled = false,
 })
 
--- Toggle Button (floating open/close, top center of screen)
 local GuiButton = Utility.Panel({
     Name = "GuiButton",
     Parent = ScreenGui,
@@ -258,8 +231,6 @@ local GuiButton = Utility.Panel({
         AutoButtonColor = false,
     }),
 })
-
--- // Smooth Dragging (sidebar acts as the drag handle) \\ -------------------
 
 local function CreateDrag(handle, target)
     local dragging = false
@@ -294,8 +265,6 @@ end
 
 CreateDrag(Info, Main)
 
--- // Core State \\ ------------------------------------------------------------
-
 local tabs = {}
 local currentTab = nil
 
@@ -308,14 +277,11 @@ local function UpdateTabCanvas(tab)
     end
 end
 
--- // NewTab \\ ------------------------------------------------------------
-
 function Library:NewTab(name, icon)
     local tab = {}
     tab.Name = name
     tab.Elements = {}
 
-    -- Sidebar tab button (icon + title, highlight on selection)
     local TabButton = Utility.new("Frame", {
         Name = "Button",
         Parent = TabList,
@@ -346,7 +312,6 @@ function Library:NewTab(name, icon)
         AutoButtonColor = false,
     })
 
-    -- Content page for this tab
     tab.Frame = Utility.new("ScrollingFrame", {
         Name = name,
         Parent = Contents,
@@ -393,7 +358,6 @@ function Library:NewTab(name, icon)
 
     Hit.MouseButton1Click:Connect(Select)
 
-    -- Highlight state driven off UIPageLayout's current page
     local Selected = false
     local function SetHighlight(on)
         Selected = on
@@ -424,8 +388,6 @@ function Library:NewTab(name, icon)
     end
 
     table.insert(tabs, tab)
-
-    -- // Element Creators (kept from original re//hance API) \\ -----------
 
     local function BaseRow(height)
         local frame = Utility.Panel({
@@ -885,8 +847,6 @@ function Library:NewTab(name, icon)
 
     return tab
 end
-
--- // Open / Close (grow-shrink like original, restyled colors) \\ -----------
 
 local uiOpen = false
 local debounce = false
