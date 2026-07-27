@@ -84,7 +84,7 @@ local function GetOrCreateScreenGui()
     if not gui then
         gui = Instance.new("ScreenGui")
         gui.Name = "rehanceUI"
-        gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
         gui.ResetOnSpawn = false
         gui.IgnoreGuiInset = true
         gui.DisplayOrder = 5
@@ -515,6 +515,7 @@ function Library:NewTab(name, icon)
             Visible = false,
             ZIndex = 20,
         }, {
+                Utility.new("UICorner", { CornerRadius = UDim.new(0, 3) }),
             Utility.new("UIStroke", { Color = Library.Config.Theme.Border }),
             Utility.new("UIListLayout", {
                 SortOrder = Enum.SortOrder.LayoutOrder,
