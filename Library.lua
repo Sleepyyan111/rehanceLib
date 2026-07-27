@@ -520,7 +520,6 @@ function Library:NewTab(name, icon)
         local track = Utility.new("Frame", {
             Name = "Track",
             Parent = frame,
-            Active = true,
             BackgroundColor3 = Color3.fromRGB(45, 45, 55),
             BorderSizePixel = 0,
             AnchorPoint = Vector2.new(0, 0.5),
@@ -528,6 +527,23 @@ function Library:NewTab(name, icon)
             Size = UDim2.new(1, -224, 0, 3),
         }, {
             Utility.new("UICorner", { CornerRadius = UDim.new(1, 0) }),
+        })
+
+        -- Invisible, taller hitbox that sits on top of the (visually thin)
+        -- track. All input is read from this instead of the 3px track so
+        -- the slider is actually easy to click/drag, while the track itself
+        -- stays skinny for looks.
+        local hitbox = Utility.new("TextButton", {
+            Name = "HitBox",
+            Parent = frame,
+            Active = true,
+            AnchorPoint = Vector2.new(0, 0.5),
+            Position = UDim2.new(0, 204, 0.5, 0),
+            Size = UDim2.new(1, -224, 0, 22),
+            BackgroundTransparency = 1,
+            Text = "",
+            AutoButtonColor = false,
+            ZIndex = 5,
         })
 
         local fill = Utility.new("Frame", {
@@ -571,7 +587,10 @@ function Library:NewTab(name, icon)
         local function UpdateVisual()
             local alpha = (max - min) > 0 and (element.Value - min) / (max - min) or 0
             alpha = math.clamp(alpha, 0, 1)
-            local tweenTime = dragging and 0 or 0.1
+            -- Always tween, even while dragging, but keep the drag tween very
+            -- short so it still feels responsive instead of laggy - this is
+            -- what smooths out the snap-to-increment jumps while you drag.
+            local tweenTime = dragging and 0.06 or 0.12
             TweenService:Create(fill, TweenInfo.new(tweenTime, Enum.EasingStyle.Quad), {
                 Size = UDim2.new(alpha, 0, 1, 0),
             }):Play()
@@ -593,15 +612,15 @@ function Library:NewTab(name, icon)
         end
 
         local function UpdateFromInput(input)
-            local absPos = track.AbsolutePosition.X
-            local absSize = track.AbsoluteSize.X
+            local absPos = hitbox.AbsolutePosition.X
+            local absSize = hitbox.AbsoluteSize.X
             if absSize <= 0 then return end
             local relative = (input.Position.X - absPos) / absSize
             relative = math.clamp(relative, 0, 1)
             element:Set(min + (max - min) * relative)
         end
 
-        track.InputBegan:Connect(function(input)
+        hitbox.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
                 UpdateFromInput(input)
