@@ -504,38 +504,54 @@ function Library:NewTab(name, icon)
             TextXAlignment = Enum.TextXAlignment.Left,
         })
 
-        local track = Utility.Panel({
+        local valueLabel = Utility.new("TextLabel", {
+            Name = "Value",
+            Parent = frame,
+            Size = UDim2.new(0, 28, 1, 0),
+            Position = UDim2.new(0, 170, 0, 0),
+            BackgroundTransparency = 1,
+            Text = tostring(element.Value),
+            TextColor3 = Color3.fromRGB(140, 140, 155),
+            TextSize = 13,
+            Font = Enum.Font.Gotham,
+            TextXAlignment = Enum.TextXAlignment.Left,
+        })
+
+        local track = Utility.new("Frame", {
             Name = "Track",
             Parent = frame,
             Active = true,
-            Size = UDim2.new(0, 210, 0, 20),
-            Position = UDim2.new(1, -222, 0.5, -10),
-            ImageColor3 = Library.Config.Theme.Background,
+            BackgroundColor3 = Color3.fromRGB(45, 45, 55),
+            BorderSizePixel = 0,
+            AnchorPoint = Vector2.new(0, 0.5),
+            Position = UDim2.new(0, 204, 0.5, 0),
+            Size = UDim2.new(1, -224, 0, 3),
         }, {
-            Utility.new("UICorner", { CornerRadius = UDim.new(0, 4) }),
+            Utility.new("UICorner", { CornerRadius = UDim.new(1, 0) }),
         })
 
         local fill = Utility.new("Frame", {
             Name = "Fill",
             Parent = track,
-            BackgroundColor3 = Library.Config.Theme.Accent,
+            BackgroundColor3 = Color3.fromRGB(135, 135, 158),
             BorderSizePixel = 0,
             Size = UDim2.new(0, 0, 1, 0),
             ZIndex = 2,
         }, {
-            Utility.new("UICorner", { CornerRadius = UDim.new(0, 4) }),
+            Utility.new("UICorner", { CornerRadius = UDim.new(1, 0) }),
         })
 
-        local valueLabel = Utility.new("TextLabel", {
-            Name = "Value",
+        local thumb = Utility.new("Frame", {
+            Name = "Thumb",
             Parent = track,
-            Size = UDim2.new(1, 0, 1, 0),
-            BackgroundTransparency = 1,
-            Text = tostring(element.Value),
-            TextColor3 = Color3.fromRGB(255, 255, 255),
-            TextSize = 12,
-            Font = Enum.Font.GothamBold,
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundColor3 = Color3.fromRGB(158, 158, 178),
+            BorderSizePixel = 0,
+            Size = UDim2.new(0, 12, 0, 12),
+            Position = UDim2.new(0, 0, 0.5, 0),
             ZIndex = 3,
+        }, {
+            Utility.new("UICorner", { CornerRadius = UDim.new(1, 0) }),
         })
 
         local dragging = false
@@ -555,8 +571,12 @@ function Library:NewTab(name, icon)
         local function UpdateVisual()
             local alpha = (max - min) > 0 and (element.Value - min) / (max - min) or 0
             alpha = math.clamp(alpha, 0, 1)
-            TweenService:Create(fill, TweenInfo.new(dragging and 0 or 0.1, Enum.EasingStyle.Quad), {
+            local tweenTime = dragging and 0 or 0.1
+            TweenService:Create(fill, TweenInfo.new(tweenTime, Enum.EasingStyle.Quad), {
                 Size = UDim2.new(alpha, 0, 1, 0),
+            }):Play()
+            TweenService:Create(thumb, TweenInfo.new(tweenTime, Enum.EasingStyle.Quad), {
+                Position = UDim2.new(alpha, 0, 0.5, 0),
             }):Play()
             valueLabel.Text = tostring(element.Value)
         end
