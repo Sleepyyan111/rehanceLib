@@ -477,6 +477,137 @@ function Library:NewTab(name, icon)
         return element
     end
 
+    function tab:Slider(text, min, max, increment, default)
+        local element = {}
+        element.Type = "Slider"
+        min = min or 0
+        max = max or 100
+        increment = increment or 1
+        element.Min = min
+        element.Max = max
+        element.Increment = increment
+        element.Value = math.clamp(default or min, min, max)
+        element.OnChange = nil
+
+        local frame = BaseRow(42)
+
+        Utility.new("TextLabel", {
+            Name = "Text",
+            Parent = frame,
+            Size = UDim2.new(0, 140, 0, 42),
+            Position = UDim2.new(0.02, 0, 0, 0),
+            BackgroundTransparency = 1,
+            Text = text,
+            TextColor3 = Library.Config.Theme.Text,
+            TextSize = 14,
+            Font = Enum.Font.Gotham,
+            TextXAlignment = Enum.TextXAlignment.Left,
+        })
+
+        local track = Utility.Panel({
+            Name = "Track",
+            Parent = frame,
+            Active = true,
+            Size = UDim2.new(0, 210, 0, 20),
+            Position = UDim2.new(1, -222, 0.5, -10),
+            ImageColor3 = Library.Config.Theme.Background,
+        }, {
+            Utility.new("UICorner", { CornerRadius = UDim.new(0, 4) }),
+        })
+
+        local fill = Utility.new("Frame", {
+            Name = "Fill",
+            Parent = track,
+            BackgroundColor3 = Library.Config.Theme.Accent,
+            BorderSizePixel = 0,
+            Size = UDim2.new(0, 0, 1, 0),
+            ZIndex = 2,
+        }, {
+            Utility.new("UICorner", { CornerRadius = UDim.new(0, 4) }),
+        })
+
+        local valueLabel = Utility.new("TextLabel", {
+            Name = "Value",
+            Parent = track,
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Text = tostring(element.Value),
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextSize = 12,
+            Font = Enum.Font.GothamBold,
+            ZIndex = 3,
+        })
+
+        local dragging = false
+
+        -- Snaps a raw value to the nearest increment and clamps it to
+        -- [min, max]. Uses integer rounding when the increment is >= 1 so
+        -- whole-number sliders don't show floating point drift (e.g. 49.999999).
+        local function SnapValue(rawValue)
+            local stepped = min + math.floor((rawValue - min) / increment + 0.5) * increment
+            stepped = math.clamp(stepped, min, max)
+            if increment >= 1 then
+                stepped = math.floor(stepped + 0.5)
+            end
+            return stepped
+        end
+
+        local function UpdateVisual()
+            local alpha = (max - min) > 0 and (element.Value - min) / (max - min) or 0
+            alpha = math.clamp(alpha, 0, 1)
+            TweenService:Create(fill, TweenInfo.new(dragging and 0 or 0.1, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(alpha, 0, 1, 0),
+            }):Play()
+            valueLabel.Text = tostring(element.Value)
+        end
+
+        function element:Set(rawValue)
+            element.Value = SnapValue(rawValue)
+            UpdateVisual()
+            if element.OnChange then element.OnChange(element.Value) end
+        end
+
+        function element:OnChange(callback)
+            element.OnChange = callback
+            return element
+        end
+
+        local function UpdateFromInput(input)
+            local absPos = track.AbsolutePosition.X
+            local absSize = track.AbsoluteSize.X
+            if absSize <= 0 then return end
+            local relative = (input.Position.X - absPos) / absSize
+            relative = math.clamp(relative, 0, 1)
+            element:Set(min + (max - min) * relative)
+        end
+
+        track.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                UpdateFromInput(input)
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                UpdateFromInput(input)
+            end
+        end)
+
+        UserInputService.InputEnded:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                dragging = false
+                UpdateVisual()
+            end
+        end)
+
+        UpdateVisual()
+
+        task.wait()
+        UpdateTabCanvas(tab)
+        return element
+    end
+
     local function DropdownBase(text, initialValue)
         local frame = BaseRow(42)
         frame.ClipsDescendants = false
