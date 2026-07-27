@@ -520,7 +520,7 @@ function Library:NewTab(name, icon)
             Name = "DropdownButton",
             Parent = frame,
             Size = UDim2.new(0, 137, 0, 22),
-            Position = UDim2.new(0.775, 0, 0.238, 0),
+            Position = UDim2.new(0.72, 0, 0.238, 0),
             BackgroundColor3 = Library.Config.Theme.Background,
             Text = initialValue,
             TextColor3 = Color3.fromRGB(159, 162, 195),
