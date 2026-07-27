@@ -198,7 +198,7 @@ local Username = Utility.new("TextLabel", {
     TextColor3 = Color3.fromRGB(140, 140, 140),
     TextSize = 12,
     Font = Enum.Font.Gotham,
-    TextXAlignment = Enum.TextXAlignment.Left,
+    TextXAlignment = Enum.TextXAlignment.Center,
 })
 
 -- Tab list container (buttons stack here)
