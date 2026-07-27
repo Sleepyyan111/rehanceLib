@@ -614,7 +614,7 @@ function Library:NewTab(name, icon)
             end)
             optionsFrame.Visible = true
             TweenService:Create(optionsFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, 137, 0, GetHeight()),
+                Size = UDim2.new(0, 120, 0, GetHeight()),
             }):Play()
         end
 
@@ -676,7 +676,7 @@ function Library:NewTab(name, icon)
             element.Open = false
             arrow.Text = " "
             local tween = TweenService:Create(optionsFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                Size = UDim2.new(0, 137, 0, 0),
+                Size = UDim2.new(0, 120, 0, 0),
             })
             tween:Play()
             tween.Completed:Connect(function() optionsFrame.Visible = false end)
@@ -698,7 +698,7 @@ function Library:NewTab(name, icon)
             RefreshContent()
             optionsFrame.Visible = true
             TweenService:Create(optionsFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, 137, 0, GetHeight()),
+                Size = UDim2.new(0, 120, 0, GetHeight()),
             }):Play()
         end
 
@@ -727,13 +727,13 @@ function Library:NewTab(name, icon)
         Players.PlayerAdded:Connect(function()
             if element.Open then
                 RefreshContent()
-                optionsFrame.Size = UDim2.new(0, 137, 0, GetHeight())
+                optionsFrame.Size = UDim2.new(0, 120, 0, GetHeight())
             end
         end)
         Players.PlayerRemoving:Connect(function()
             if element.Open then
                 RefreshContent()
-                optionsFrame.Size = UDim2.new(0, 137, 0, GetHeight())
+                optionsFrame.Size = UDim2.new(0, 120, 0, GetHeight())
             end
         end)
 
@@ -768,8 +768,8 @@ function Library:NewTab(name, icon)
         local input = Utility.new("TextBox", {
             Name = "Input",
             Parent = frame,
-            Size = UDim2.new(0, 137, 0, 22),
-            Position = UDim2.new(0.775, 0, 0.238, 0),
+            Size = UDim2.new(0, 120, 0, 22),
+            Position = UDim2.new(0.72, 0, 0.238, 0),
             BackgroundColor3 = Library.Config.Theme.Background,
             TextColor3 = Color3.fromRGB(159, 162, 195),
             Text = placeholder or "",
