@@ -508,8 +508,8 @@ function Library:NewTab(name, icon)
         local optionsFrame = Utility.Panel({
             Name = "OptionsFrame",
             Parent = frame,
-            Size = UDim2.new(0, 137, 0, 0),
-            Position = UDim2.new(0.775, 0, 1, 2),
+            Size = UDim2.new(0, 120, 0, 0),
+            Position = UDim2.new(0.72, 0, 1, 2),
             ImageColor3 = Color3.fromRGB(30, 30, 37),
             ClipsDescendants = true,
             Visible = false,
@@ -595,7 +595,7 @@ function Library:NewTab(name, icon)
             element.Open = false
             arrow.Text = "↓"
             local tween = TweenService:Create(optionsFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                Size = UDim2.new(0, 137, 0, 0),
+                Size = UDim2.new(0, 120, 0, 0),
             })
             tween:Play()
             tween.Completed:Connect(function() optionsFrame.Visible = false end)
