@@ -1112,6 +1112,7 @@ function Library:Notify(text, duration)
             Color = NOTIF_CARD_COLOR,
             Thickness = 2,
             Transparency = 0.1,
+            BorderOffset = UDim.new(0, 2)
         }),
     })
 
