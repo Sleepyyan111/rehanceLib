@@ -1167,7 +1167,7 @@ function Library:Notify(text, duration)
     dismissButton.MouseButton1Click:Connect(AnimateOut)
 
     -- Entrance: slide in from off-screen left.
-    TweenService:Create(card, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    TweenService:Create(card, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0, 0),
     }):Play()
 
