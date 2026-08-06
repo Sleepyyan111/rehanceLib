@@ -229,6 +229,26 @@ local DropdownCatcher = Utility.new("TextButton", {
     Visible = false,
 })
 
+-- Notifications stack bottom-left, newest pushed in at the bottom, older
+-- ones bumped upward by the UIListLayout. High ZIndex values because the
+-- ScreenGui uses Global ZIndexBehavior, so numbers compete tree-wide, not
+-- just within their own parent.
+local NotificationHolder = Utility.new("Frame", {
+    Name = "NotificationHolder",
+    Parent = ScreenGui,
+    AnchorPoint = Vector2.new(0, 1),
+    Position = UDim2.new(0, 20, 1, -20),
+    Size = UDim2.new(0, 300, 1, -40),
+    BackgroundTransparency = 1,
+    ZIndex = 100,
+}, {
+    Utility.new("UIListLayout", {
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        VerticalAlignment = Enum.VerticalAlignment.Bottom,
+        Padding = UDim.new(0, 8),
+    }),
+})
+
 local GuiButton = Utility.Panel({
     Name = "GuiButton",
     Parent = ScreenGui,
@@ -1048,6 +1068,130 @@ function Library:NewTab(name, icon)
     end
 
     return tab
+end
+
+local notifOrder = 0
+
+-- Library:Notify(title, body, duration)
+-- Creates a toast that slides in from the left, sits for `duration` seconds
+-- (default 4), then fades out while sliding down. Multiple notifications
+-- stack in NotificationHolder via LayoutOrder, so several can be on screen
+-- at once without overlapping.
+function Library:Notify(titleText, bodyText, duration)
+    duration = duration or 4
+    notifOrder += 1
+
+    local slot = Utility.new("Frame", {
+        Name = "NotificationSlot",
+        Parent = NotificationHolder,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 64),
+        LayoutOrder = notifOrder,
+        ClipsDescendants = false,
+        ZIndex = 100,
+    })
+
+    -- The slot's own Position is owned by UIListLayout, so all entrance/exit
+    -- motion happens on this inner Card instead - it's free to be tweened
+    -- without the layout fighting it.
+    local card = Utility.Panel({
+        Name = "Card",
+        Parent = slot,
+        ImageColor3 = Library.Config.Theme.Darker,
+        Size = UDim2.new(1, 0, 1, 0),
+        Position = UDim2.new(0, -340, 0, 0),
+        ZIndex = 100,
+    }, {
+        Utility.new("UIStroke", { Name = "Stroke", Color = Library.Config.Theme.Border }),
+    })
+
+    local accent = Utility.new("Frame", {
+        Name = "Accent",
+        Parent = card,
+        BackgroundColor3 = Library.Config.Theme.Accent,
+        BorderSizePixel = 0,
+        Size = UDim2.new(0, 3, 1, 0),
+        ZIndex = 101,
+    }, {
+        Utility.new("UICorner", { CornerRadius = UDim.new(1, 0) }),
+    })
+
+    local titleLabel = Utility.new("TextLabel", {
+        Name = "Title",
+        Parent = card,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 16, 0, 10),
+        Size = UDim2.new(1, -28, 0, 18),
+        Font = Enum.Font.GothamBold,
+        Text = titleText or "Notification",
+        TextColor3 = Library.Config.Theme.Accent,
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 101,
+    })
+
+    local bodyLabel = Utility.new("TextLabel", {
+        Name = "Body",
+        Parent = card,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 16, 0, 30),
+        Size = UDim2.new(1, -28, 0, 26),
+        Font = Enum.Font.Gotham,
+        Text = bodyText or "",
+        TextColor3 = Library.Config.Theme.Text,
+        TextSize = 13,
+        TextWrapped = true,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Top,
+        ZIndex = 101,
+    })
+
+    local dismissButton = Utility.new("TextButton", {
+        Name = "DismissHit",
+        Parent = card,
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        Text = "",
+        AutoButtonColor = false,
+        ZIndex = 102,
+    })
+
+    local stroke = card:FindFirstChild("Stroke")
+    local dismissed = false
+
+    local function AnimateOut()
+        if dismissed then return end
+        dismissed = true
+
+        local outInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+
+        TweenService:Create(card, outInfo, {
+            Position = UDim2.new(0, 0, 0, 40),
+            ImageTransparency = 1,
+        }):Play()
+        TweenService:Create(stroke, outInfo, { Transparency = 1 }):Play()
+        TweenService:Create(accent, outInfo, { BackgroundTransparency = 1 }):Play()
+        TweenService:Create(titleLabel, outInfo, { TextTransparency = 1 }):Play()
+        local bodyTween = TweenService:Create(bodyLabel, outInfo, { TextTransparency = 1 })
+        bodyTween:Play()
+
+        bodyTween.Completed:Connect(function()
+            slot:Destroy()
+        end)
+    end
+
+    dismissButton.MouseButton1Click:Connect(AnimateOut)
+
+    -- Entrance: slide in from off-screen left.
+    TweenService:Create(card, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0, 0, 0, 0),
+    }):Play()
+
+    task.delay(duration, AnimateOut)
+
+    return {
+        Dismiss = AnimateOut,
+    }
 end
 
 local uiOpen = false
