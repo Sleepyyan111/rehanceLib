@@ -1122,7 +1122,7 @@ function Library:Notify(text, duration)
         BackgroundTransparency = 1,
         Size = UDim2.new(1, -20, 1, 0),
         Position = UDim2.new(0, 10, 0, 0),
-        Font = Enum.Font.GothamBold,
+        Font = Enum.Font.Gotham,
         Text = text or "",
         TextColor3 = Library.Config.Theme.Accent,
         TextSize = 15,
