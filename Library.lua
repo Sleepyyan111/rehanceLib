@@ -236,14 +236,15 @@ local DropdownCatcher = Utility.new("TextButton", {
 local NotificationHolder = Utility.new("Frame", {
     Name = "NotificationHolder",
     Parent = ScreenGui,
-    AnchorPoint = Vector2.new(0, 1),
-    Position = UDim2.new(0, 20, 1, -20),
+    AnchorPoint = Vector2.new(1, 1),
+    Position = UDim2.new(1, -20, 1, -20),
     Size = UDim2.new(0, 300, 1, -40),
     BackgroundTransparency = 1,
     ZIndex = 100,
 }, {
     Utility.new("UIListLayout", {
         SortOrder = Enum.SortOrder.LayoutOrder,
+        HorizontalAlignment = Enum.HorizontalAlignment.Right,
         VerticalAlignment = Enum.VerticalAlignment.Bottom,
         Padding = UDim.new(0, 8),
     }),
@@ -1112,7 +1113,6 @@ function Library:Notify(text, duration)
             Color = NOTIF_CARD_COLOR,
             Thickness = 2,
             Transparency = 0.1,
-            BorderOffset = UDim.new(0, 2)
         }),
     })
 
@@ -1167,7 +1167,7 @@ function Library:Notify(text, duration)
     dismissButton.MouseButton1Click:Connect(AnimateOut)
 
     -- Entrance: slide in from off-screen left.
-    TweenService:Create(card, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    TweenService:Create(card, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0, 0),
     }):Play()
 
