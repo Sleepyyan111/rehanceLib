@@ -1071,13 +1071,15 @@ function Library:NewTab(name, icon)
 end
 
 local notifOrder = 0
+local NOTIF_CARD_COLOR = Color3.fromRGB(25, 25, 31)
 
--- Library:Notify(title, body, duration)
+-- Library:Notify(text, duration)
 -- Creates a toast that slides in from the left, sits for `duration` seconds
 -- (default 4), then fades out while sliding down. Multiple notifications
 -- stack in NotificationHolder via LayoutOrder, so several can be on screen
--- at once without overlapping.
-function Library:Notify(titleText, bodyText, duration)
+-- at once without overlapping. Card look (rounded dark panel, subtle
+-- stroke, centered accent-blue text) matches the provided reference.
+function Library:Notify(text, duration)
     duration = duration or 4
     notifOrder += 1
 
@@ -1085,7 +1087,7 @@ function Library:Notify(titleText, bodyText, duration)
         Name = "NotificationSlot",
         Parent = NotificationHolder,
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 64),
+        Size = UDim2.new(0, 206, 0, 50),
         LayoutOrder = notifOrder,
         ClipsDescendants = false,
         ZIndex = 100,
@@ -1094,55 +1096,38 @@ function Library:Notify(titleText, bodyText, duration)
     -- The slot's own Position is owned by UIListLayout, so all entrance/exit
     -- motion happens on this inner Card instead - it's free to be tweened
     -- without the layout fighting it.
-    local card = Utility.Panel({
+    local card = Utility.new("Frame", {
         Name = "Card",
         Parent = slot,
-        ImageColor3 = Library.Config.Theme.Darker,
+        BackgroundColor3 = NOTIF_CARD_COLOR,
+        BackgroundTransparency = 0.1,
+        BorderSizePixel = 0,
         Size = UDim2.new(1, 0, 1, 0),
         Position = UDim2.new(0, -340, 0, 0),
         ZIndex = 100,
     }, {
-        Utility.new("UIStroke", { Name = "Stroke", Color = Library.Config.Theme.Border }),
+        Utility.new("UICorner", { CornerRadius = UDim.new(0, 7) }),
+        Utility.new("UIStroke", {
+            Name = "Stroke",
+            Color = NOTIF_CARD_COLOR,
+            Thickness = 2,
+            Transparency = 0.1,
+        }),
     })
 
-    local accent = Utility.new("Frame", {
-        Name = "Accent",
-        Parent = card,
-        BackgroundColor3 = Library.Config.Theme.Accent,
-        BorderSizePixel = 0,
-        Size = UDim2.new(0, 3, 1, 0),
-        ZIndex = 101,
-    }, {
-        Utility.new("UICorner", { CornerRadius = UDim.new(1, 0) }),
-    })
-
-    local titleLabel = Utility.new("TextLabel", {
-        Name = "Title",
+    local label = Utility.new("TextLabel", {
+        Name = "Text",
         Parent = card,
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 16, 0, 10),
-        Size = UDim2.new(1, -28, 0, 18),
+        Size = UDim2.new(1, -20, 1, 0),
+        Position = UDim2.new(0, 10, 0, 0),
         Font = Enum.Font.GothamBold,
-        Text = titleText or "Notification",
+        Text = text or "",
         TextColor3 = Library.Config.Theme.Accent,
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        ZIndex = 101,
-    })
-
-    local bodyLabel = Utility.new("TextLabel", {
-        Name = "Body",
-        Parent = card,
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0, 16, 0, 30),
-        Size = UDim2.new(1, -28, 0, 26),
-        Font = Enum.Font.Gotham,
-        Text = bodyText or "",
-        TextColor3 = Library.Config.Theme.Text,
-        TextSize = 13,
+        TextSize = 15,
         TextWrapped = true,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextYAlignment = Enum.TextYAlignment.Top,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        TextYAlignment = Enum.TextYAlignment.Center,
         ZIndex = 101,
     })
 
@@ -1167,15 +1152,13 @@ function Library:Notify(titleText, bodyText, duration)
 
         TweenService:Create(card, outInfo, {
             Position = UDim2.new(0, 0, 0, 40),
-            ImageTransparency = 1,
+            BackgroundTransparency = 1,
         }):Play()
         TweenService:Create(stroke, outInfo, { Transparency = 1 }):Play()
-        TweenService:Create(accent, outInfo, { BackgroundTransparency = 1 }):Play()
-        TweenService:Create(titleLabel, outInfo, { TextTransparency = 1 }):Play()
-        local bodyTween = TweenService:Create(bodyLabel, outInfo, { TextTransparency = 1 })
-        bodyTween:Play()
+        local labelTween = TweenService:Create(label, outInfo, { TextTransparency = 1 })
+        labelTween:Play()
 
-        bodyTween.Completed:Connect(function()
+        labelTween.Completed:Connect(function()
             slot:Destroy()
         end)
     end
