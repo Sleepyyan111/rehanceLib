@@ -5,20 +5,17 @@ local Players = game:GetService("Players")
 
 Library.Version = "2.0.0"
 
--- ===========================================================================
--- Theme — pulled from Re//Factor's palette (lavender accents, near-black
--- panels, Arial/Ubuntu FontFace, thin white strokes at 0.9 transparency).
--- ===========================================================================
+
 Library.Config = {
 	Theme = {
-		Background  = Color3.fromRGB(25, 25, 31),   -- main panel fill
-		SideBar     = Color3.fromRGB(0, 0, 0),       -- sidebar tint (used with high transparency)
-		Accent      = Color3.fromRGB(175, 180, 255), -- titles / icons / notif text
-		RowBg       = Color3.fromRGB(204, 209, 255), -- row + tab background tint
+		Background  = Color3.fromRGB(25, 25, 31),   
+		SideBar     = Color3.fromRGB(0, 0, 0),      
+		Accent      = Color3.fromRGB(175, 180, 255),
+		RowBg       = Color3.fromRGB(204, 209, 255), 
 		IconColor   = Color3.fromRGB(193, 193, 255),
-		Text        = Color3.fromRGB(157, 157, 167), -- muted row label text
+		Text        = Color3.fromRGB(157, 157, 167), 
 		White       = Color3.fromRGB(255, 255, 255),
-		Darker      = Color3.fromRGB(30, 30, 37),    -- dropdown option list bg
+		Darker      = Color3.fromRGB(30, 30, 37),    
 		OptionHover = Color3.fromRGB(138, 138, 148),
 		OptionIdle  = Color3.fromRGB(97, 97, 104),
 		Stroke      = Color3.fromRGB(255, 255, 255),
@@ -26,28 +23,13 @@ Library.Config = {
 	AnimationSpeed = 0.3,
 }
 
--- ===========================================================================
--- Lucide icon support — resolves a Lucide icon name (e.g. "settings",
--- "user", "chevron-down") to a Roblox rbxassetid using a hosted name->id
--- map (sourced from frappedevs/lucideblox, the same data Fluent uses).
--- Falls back to treating the string as a raw asset id if it's not a
--- known Lucide name, so old "rbxassetid://..." calls still work.
---
--- NOTE: lucideblox's icons.json is a FLAT map — { "icon-name":
--- "rbxassetid://XXXX", ... } — one full dedicated image per icon. It is
--- NOT a "48px" spritesheet keyed by {assetId, rectSize, rectOffset} like
--- Rayfield's bundled icons.lua. ResolveIcon below matches the real shape.
--- ===========================================================================
+
 local LucideIcons = {
     Map = {},
     Loaded = false,
 }
 
--- This is Rayfield's OWN icon pack — a Lua module (not JSON) that returns
--- { ["48px"] = { name = {assetId, {width,height}, {x,y}}, ... }, ["256px"] = {...} }.
--- It's the same file Rayfield itself loads (see icons.lua in its repo), and
--- it's a much larger/more complete set than lucideblox's icons.json — this
--- one actually contains "zap", "settings", "users", etc.
+
 local ICON_MAP_URL =
     "https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua"
 
@@ -59,10 +41,7 @@ local function FetchIconMap()
     local success, result = pcall(function()
         local body
 
-        -- Try request()/http_request() first, but fall back to game:HttpGet
-        -- on ANY failure (bad status code, empty body, thrown error) rather
-        -- than giving up — some executors' request() implementations choke
-        -- on raw.githubusercontent.com for reasons HttpGet doesn't hit.
+
         if request then
             local reqOk, response = pcall(request, {
                 Url = ICON_MAP_URL,
@@ -88,8 +67,6 @@ local function FetchIconMap()
 
         assert(body and #body > 0, "Empty response from both request() and HttpGet")
 
-        -- icons.lua is Lua SOURCE that does `return {...}` — compile and run
-        -- it, don't JSON-decode it.
         local chunk, loadErr = loadstring(body)
         assert(chunk, "Failed to compile icons.lua: " .. tostring(loadErr))
 
@@ -135,9 +112,7 @@ function Library:ResolveIcon(icon, default)
 
 	icon = string.lower(icon):match("^%s*(.-)%s*$")
 
-	-- icons.lua structure: Map["48px"][icon] = { assetId, {w,h}, {x,y} } —
-	-- a real spritesheet, so unlike a flat asset-per-icon map we DO need
-	-- to slice out the right rect via ImageRectOffset/ImageRectSize.
+
 	local map = LucideIcons.Map
 	if not map then
 		warn("[re//hance] Lucide icon map is not loaded")
@@ -196,9 +171,6 @@ function Utility.new(Class, Properties, Children)
 	return NewInstance
 end
 
--- Re//Factor doesn't use 9-slice panels — every panel is a plain Frame with
--- a UICorner and (usually) a thin white UIStroke at 0.9 transparency. This
--- replaces the old Utility.Panel slice-image helper.
 function Utility.Card(Properties, Children)
 	Properties = Properties or {}
 	local cornerRadius = Properties.CornerRadius or 4
@@ -243,11 +215,7 @@ local function GetOrCreateScreenGui()
 
 	local playerGui = player:WaitForChild("PlayerGui")
 
-	-- If the library was already executed before (e.g. re-running the
-	-- script in the same session), an old "rehanceUI" ScreenGui may
-	-- still be sitting in PlayerGui. Destroy it so we don't end up with
-	-- duplicate UI, stale connections, or a reused instance whose state
-	-- doesn't match this fresh run.
+
 	local existing = playerGui:FindFirstChild("rehanceUI")
 	if existing then
 		existing:Destroy()
@@ -276,11 +244,7 @@ Players.LocalPlayer.CharacterAdded:Connect(function()
 	end
 end)
 
--- ===========================================================================
--- MainUI — 775x452, centered, near-black panel with 5px corners, matching
--- Re//Factor's MainUI frame exactly (just recentered via AnchorPoint so the
--- new round button can grow it symmetrically).
--- ===========================================================================
+
 local Main = Utility.new("Frame", {
 	Name = "MainUI",
 	Parent = ScreenGui,
@@ -388,7 +352,7 @@ local UIPageLayout = Utility.new("UIPageLayout", {
 	TouchInputEnabled = false,
 })
 
--- Shared click-catcher to close any open dropdown when clicking outside it.
+
 local DropdownCatcher = Utility.new("TextButton", {
 	Name = "DropdownCatcher",
 	Parent = ScreenGui,
@@ -400,12 +364,7 @@ local DropdownCatcher = Utility.new("TextButton", {
 	Visible = false,
 })
 
--- Notifications — same card look as Re//Factor's Notifications.Frame,
--- repositioned/sized to match Re//Factor's Notifications container.
--- No UIListLayout here on purpose: layout instances snap children into
--- place instantly, and we want existing notifications to smoothly tween
--- up (or down) whenever one is added or dismissed, so positions are
--- managed manually below.
+
 local NotificationHolder = Utility.new("Frame", {
 	Name = "Notifications",
 	Parent = ScreenGui,
@@ -423,11 +382,7 @@ local NOTIF_RIGHT_PADDING = 6
 
 local activeNotifications = {} -- ordered oldest (top) -> newest (bottom)
 
--- Recomputes where every active notification slot should sit (stacked
--- upward from the bottom-right corner) and moves them there. Slots that
--- were already positioned tween smoothly to their new spot; a brand new
--- slot is simply placed at its target immediately (its own fade/rise
--- animation, set up in Library:Notify, handles its entrance).
+
 local function RepositionNotifications()
 	local count = #activeNotifications
 	for i, slotData in ipairs(activeNotifications) do
@@ -444,8 +399,7 @@ local function RepositionNotifications()
 	end
 end
 
--- Round open/close button (new design) — circular, dark, lavender icon,
--- with a press/release scale-punch.
+
 local GuiButton = Utility.new("Frame", {
 	Name = "GuiButton",
 	Parent = ScreenGui,
